@@ -5,11 +5,15 @@ from copy import copy
 
 class JOSpider(scrapy.Spider):
     name = 'jo_summary_spider'
-    start_urls = ['https://www.legifrance.gouv.fr/eli/jo/2017/11/25']
+    start_urls = [
+        # 'https://www.legifrance.gouv.fr/eli/jo/2017/11/25',
+        # 'https://www.legifrance.gouv.fr/eli/jo/2017/11/23',
+        'https://www.legifrance.gouv.fr/eli/jo/2017/11/26',
+    ]
 
     def __init__(self):
         self.array = []
-        self.verbose = False
+        self.verbose = True
 
     def handleLeaf(self, leaf, path=[]):
         """
@@ -18,10 +22,10 @@ class JOSpider(scrapy.Spider):
         dictionary.
         """
         nb = leaf.css('.numeroTexte::text').extract_first()
-        text = leaf.css('a::text').extract_first()
+        text = leaf.xpath('./a/text()').extract_first()
         href = leaf.css('a::attr(href)').extract_first()
         if self.verbose:
-            print(''.join(['\t' for _ in range(len(path))]) + 'LI A: ' + str(text[0:25]))
+            print(''.join(['\t' for _ in range(len(path))]) + 'LI A: ' + (text[0:20] if text else 'None'))
         if nb and text:
             self.array.append({
                 'i': int(nb),
@@ -29,17 +33,6 @@ class JOSpider(scrapy.Spider):
                 'text': text,
                 'href': href,
             })
-
-    def recursiveUL(self, path, ul):
-        """
-        Receives an <ul> and iterates through it's direct <li> tags.
-        """
-        if self.verbose:
-            print(''.join(['\t' for _ in range(len(path)-1)]) + 'UL: ' + str(path))
-        LIs = ul.xpath('./li')
-
-        for i, li in enumerate(LIs):
-            self.recursiveLI(path, li, i, len(LIs))
 
     def recursiveLI(self, path, li, i, n):
         """
@@ -71,32 +64,62 @@ class JOSpider(scrapy.Spider):
         if i == n-1:
             path.pop()
 
+    def recursiveUL(self, path, ul):
+        """
+        Receives an <ul> and iterates through it's direct <li> tags.
+        """
+        if self.verbose:
+            print(''.join(['\t' for _ in range(len(path))]) + 'UL: ' + str(path))
+        LIs = ul.xpath('./li')
+
+        for i, li in enumerate(LIs):
+            self.recursiveLI(path, li, i, len(LIs))
+
     def parse(self, response):
         """
         Summaries from the Journal Officiel don't follow a clean structure,
         which prevents us from implementing a straitforward recursion.
         """
+        self.array = []
         mainTitle = response.css('.titleJO::text').extract_first()
-        mainDiv = response.css('.sommaire > ul')
+        mainUl = response.css('.sommaire > ul')
+        mainTag = response.css('.sommaire > ul > li')
 
-        allLinks = mainDiv.css('a::text').extract()
-        mainTitles = mainDiv.css('h3::text').extract()
+        allProbableArticles = mainUl.css('a::text').extract()
+        h3Titles = mainTag.css('h3::text').extract()
 
-        allTags = mainDiv.xpath('./ul|li')
-        realULs = filter(lambda tag: not tag.extract().startswith('<li'), allTags)
-        potentialLeaves = filter(lambda tag: tag.extract().startswith('<li'), allTags)
+        for i, ul in enumerate(mainTag.xpath('./ul')):
+            self.recursiveUL([h3Titles[i]], ul)
+
+        # RIDICULOUS SPECIAL CASES
+
+            # https://www.legifrance.gouv.fr/eli/jo/2017/11/25
+        potentialLeaves = mainUl.xpath('./li')
 
         for leaf in potentialLeaves:
             self.handleLeaf(leaf)
 
-        for i, mainTag in enumerate(realULs):
-            self.recursiveMain([mainTitles[i]], mainTag)
+        missedMainLi = len(mainUl.xpath('./li').extract()) > 1
+        if missedMainLi:
+            mainTag = response.css('.sommaire > ul')
+            h3Titles = mainTag.css('h3::text').extract()
 
+            for i, ul in enumerate(mainTag.xpath('./ul')):
+                self.recursiveUL([h3Titles[i]], ul)
+
+        # Final data
         data = {
             'title': mainTitle,
-            'nbLinks': len(allLinks),
+            'url': response.url,
             'array': self.array,
         }
+
+        # Testing that the retreived data is somewhat consistent with
+        # what we would expect (ie checking that the assumptions that
+        # we are making on the page's structure seems correct).
+        print(len(allProbableArticles))
+        print(len(self.array))
+        assert(len(self.array) == len(allProbableArticles))
 
         with open('parsed_summary.json', 'w') as outfile:
             json.dump(data, outfile)
