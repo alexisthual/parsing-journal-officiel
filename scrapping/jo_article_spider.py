@@ -8,9 +8,13 @@ from bs4 import BeautifulSoup
 class JOArticleSpider(scrapy.Spider):
     name = 'jo_article_spider'
     start_urls = [
-        # https://www.legifrance.gouv.fr/affichTexte.do;jsessionid=AADCFA7173BA3EC8DE9D2FFD331D7C84.tplgfr30s_3?cidTexte=JORFTEXT000036086535&dateTexte=&oldAction=rechJO&categorieLien=id&idJO=JORFCONT000036086530
         # 'https://www.legifrance.gouv.fr/eli/decret/2017/11/24/INTE1728700D/jo/texte',
-        'https://www.legifrance.gouv.fr/eli/decret/2017/11/24/SSAH1720799D/jo/texte',
+        # 'https://www.legifrance.gouv.fr/eli/decret/2017/11/24/SSAH1720799D/jo/texte',
+        # TODO: The following link has a <table>
+        # TODO: Find articles which might display HTML tags that one wants to keep track of.
+        # 'https://www.legifrance.gouv.fr/eli/arrete/2017/11/21/CPAB1732576A/jo/texte',
+        # 'https://www.legifrance.gouv.fr/eli/arrete/2017/11/22/MICC1732367A/jo/texte',
+        'https://www.legifrance.gouv.fr/affichTexte.do;jsessionid=8B37EB9CD05070E2B2D7AC64463FE0B7.tplgfr30s_3?cidTexte=JORFTEXT000036086705&dateTexte=&oldAction=rechJO&categorieLien=id&idJO=JORFCONT000036086530',
     ]
 
     def __init__(self):
@@ -50,6 +54,7 @@ class JOArticleSpider(scrapy.Spider):
     def parseText(self, text):
         parsedText = re.sub('[\t]', '', text)
         parsedText = re.sub('(\s*[\n]+\s*)+', '\n', parsedText)
+        parsedText = parsedText.strip()
 
         return parsedText
 
