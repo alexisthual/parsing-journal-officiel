@@ -1,9 +1,10 @@
 import scrapy
 import json
 from copy import copy
+import re
 
 
-class JOSpider(scrapy.Spider):
+class JOSummarySpider(scrapy.Spider):
     name = 'jo_summary_spider'
     start_urls = [
         # 'https://www.legifrance.gouv.fr/eli/jo/2017/11/25',
@@ -75,13 +76,19 @@ class JOSpider(scrapy.Spider):
         for i, li in enumerate(LIs):
             self.recursiveLI(path, li, i, len(LIs))
 
+    def parseText(self, text):
+        rx = re.compile('\W+')
+        parsedText = rx.sub(' ', text).strip()
+
+        return parsedText
+
     def parse(self, response):
         """
         Summaries from the Journal Officiel don't follow a clean structure,
         which prevents us from implementing a straitforward recursion.
         """
         self.array = []
-        mainTitle = response.css('.titleJO::text').extract_first()
+        mainTitle = self.parseText(response.css('.titleJO::text').extract_first())
         mainUl = response.css('.sommaire > ul')
         mainTag = response.css('.sommaire > ul > li')
 
