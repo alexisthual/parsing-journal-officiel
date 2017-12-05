@@ -3,6 +3,7 @@ import json
 from copy import copy
 import re
 from bs4 import BeautifulSoup
+from utils.textParser import textParser
 
 
 class JOArticleSpider(scrapy.Spider):
@@ -51,13 +52,6 @@ class JOArticleSpider(scrapy.Spider):
         if self.verbose:
             print(self.article)
 
-    def parseText(self, text):
-        parsedText = re.sub('[\t]', '', text)
-        parsedText = re.sub('(\s*[\n]+\s*)+', '\n', parsedText)
-        parsedText = parsedText.strip()
-
-        return parsedText
-
     def parse(self, response):
         """
         Doc
@@ -81,7 +75,7 @@ class JOArticleSpider(scrapy.Spider):
         self.scrapMainDiv(mainDiv)
 
         textToParse = [self.entete, self.article]
-        textToParse = list(map(self.parseText, textToParse))
+        textToParse = list(map(textParser.parseText, textToParse))
         [self.entete, self.article] = textToParse
 
         assert('NOR' in self.entete)
