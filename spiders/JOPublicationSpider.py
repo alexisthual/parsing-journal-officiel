@@ -1,20 +1,28 @@
-import scrapy
 import json
-from copy import copy
+import os
 import re
+import scrapy
+from copy import copy
+from functools import partial
+from bs4 import BeautifulSoup
+
+from utils.textParser import textParser
 
 
-class JOSummarySpider(scrapy.Spider):
-    name = 'jo_summary_spider'
-    start_urls = [
-        # 'https://www.legifrance.gouv.fr/eli/jo/2017/11/25',
-        # 'https://www.legifrance.gouv.fr/eli/jo/2017/11/23',
-        'https://www.legifrance.gouv.fr/eli/jo/2017/11/26',
-    ]
+class JOPublicationSpider(scrapy.Spider):
+    name = 'JOPublicationSpider'
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
+        super(JOPublicationSpider, self).__init__(*args, **kwargs)
+
+        self.start_urls = [kwargs.get('data')['start_url']]
+        self.date = kwargs.get('data')['date']
         self.array = []
-        self.verbose = True
+        self.verbose = False
+
+
+    # PARSING THE PUBLICATION'S SUMMARY
+
 
     def handleLeaf(self, leaf, path=[]):
         """
@@ -87,6 +95,11 @@ class JOSummarySpider(scrapy.Spider):
         Summaries from the Journal Officiel don't follow a clean structure,
         which prevents us from implementing a straitforward recursion.
         """
+
+        # Check if the url actually leads to a JO edition.
+        if len(response.css('.sommaire').extract()) == 0:
+            return
+
         self.array = []
         mainTitle = self.parseText(response.css('.titleJO::text').extract_first())
         mainUl = response.css('.sommaire > ul')
@@ -124,11 +137,103 @@ class JOSummarySpider(scrapy.Spider):
         # Testing that the retreived data is somewhat consistent with
         # what we would expect (ie checking that the assumptions that
         # we are making on the page's structure seems correct).
-        print(len(allProbableArticles))
-        print(len(self.array))
         assert(len(self.array) == len(allProbableArticles))
 
-        with open('parsed_summary.json', 'w') as outfile:
+        path = 'output/' + '-'.join(self.date) + '/'
+        filename = 'summary.json'
+
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+        with open(os.path.join(path, filename), 'w+') as outfile:
+            json.dump(data, outfile)
+
+        for followLink in data['array']:
+            yield scrapy.Request(
+                'https://www.legifrance.gouv.fr' + followLink['href'],
+                callback=partial(self.parseArticle, followLink['i'])
+            )
+
+        # yield data
+
+
+    # PARSING THE PUBLICATION'S ARTICLES
+
+
+    def enrichLinks(self, div):
+        links = div.xpath('.//a')
+
+        for a in links:
+            text = a.xpath('./text()').extract_first()
+            href = a.xpath('./@href').extract_first()
+            self.links.append({
+                'text': text,
+                'href': href,
+            })
+
+    def scrapMainDiv(self, div):
+        # Collect Entete
+        enteteDiv = div.xpath('./div[contains(@class, \'enteteTexte\')]')
+        enteteSoup = BeautifulSoup(enteteDiv.extract_first(), 'html.parser')
+        self.entete = enteteSoup.get_text()
+        # Collect links inside entete
+        self.enrichLinks(enteteDiv)
+        if self.verbose:
+            print(self.entete)
+
+        # Collect remaining text
+        articleDiv = div.xpath('./div[2]')
+        articleSoup = BeautifulSoup(articleDiv.extract_first(), 'html.parser')
+        self.article = articleSoup.get_text()
+        # Collect links inside entete
+        self.enrichLinks(articleDiv)
+        if self.verbose:
+            print(self.article)
+
+    def parseArticle(self, textNumber, response):
+        """
+        Doc
+        """
+        # A priori, the div we are interested in is the second div
+        # which is a direct children of div.data
+        # For "safety" reasons, we chose to check them all.
+        self.links = []
+        dataDiv = response.css('.data')
+        mainDiv = None
+
+        for div in dataDiv.xpath('./div'):
+            hasEntete = len(div.xpath('./div[contains(@class, \'enteteTexte\')]')) == 1
+            if hasEntete:
+                if self.verbose:
+                    print('LOG: div.data correctly found')
+                mainDiv = div
+
+        assert(mainDiv)
+
+        self.scrapMainDiv(mainDiv)
+
+        textToParse = [self.entete, self.article]
+        textToParse = list(map(textParser.parseText, textToParse))
+        [self.entete, self.article] = textToParse
+
+        assert('NOR' in self.entete)
+        assert('ELI' in self.entete)
+        assert(len(self.article) > 15)
+
+        data = {
+            'url': response.url,
+            'entete': self.entete,
+            'article': self.article,
+            'links': self.links,
+        }
+
+        path = 'output/' + '-'.join(self.date) + '/articles/'
+        filename = str(textNumber) + '.json'
+
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+        with open(os.path.join(path, filename), 'w+') as outfile:
             json.dump(data, outfile)
 
         yield data
