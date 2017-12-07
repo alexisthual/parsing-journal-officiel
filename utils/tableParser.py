@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-from textParser import textParser
+from .textParser import textParser
 
 
 class tableParser:
@@ -73,7 +73,7 @@ class tableParser:
                 self.th.append(parsedRow)
 
     def toJson(self, htmlText):
-        htmlText = BeautifulSoup(htmlText, 'html.parser')
+        soup = BeautifulSoup(str(htmlText), 'html.parser')
         self.rowspanAccu = [{}]
         self.startIndex = 0
         self.th = []
@@ -81,7 +81,7 @@ class tableParser:
 
         # One assumes the first rows carry the column information
         # and that they use th tags
-        self.tableRows = htmlText.find_all('tr')
+        self.tableRows = soup.find_all('tr')
         self.findTh()
 
         if len(self.tableRows) > self.startIndex:
@@ -93,127 +93,3 @@ class tableParser:
             'thRows': self.th,
             'tdRows': self.rows
         }
-
-testTable1 = """
-<table border="1">
-<tbody><tr>
-<th>
-<br>Puissance de l'installation (P)</th>
-<th>
-<br>Réfaction sur les ouvrages propres tels que définis
-      <br>
-    au <br>
-<a href="/affichCodeArticle.do?cidTexte=LEGITEXT000023983208&amp;idArticle=LEGIARTI000031749137&amp;dateTexte=&amp;categorieLien=cid" rel="eli:cites">premier alinéa de l'article D. 342-22
-    du code de l'énergie</a>
-</th>
-<th>
-<br>Réfaction sur la quote part, telle que définie
-      <br>
-    au <br>
-<a href="/affichCodeArticle.do?cidTexte=LEGITEXT000023983208&amp;idArticle=LEGIARTI000031749137&amp;dateTexte=&amp;categorieLien=cid" rel="eli:cites">deuxième alinéa de l'article D. 342-22
-    du code de l'énergie</a>
-</th>
-</tr>
-<tr>
-<td align="center">
-<br>100 kVA &lt;P ≤ 500 kW</td>
-<td align="center" rowspan="3">
-<br>40 %</td>
-<td align="center">
-<br>40 %</td>
-</tr>
-<tr>
-<td align="center">
-<br>500 kW &lt; P &lt; 1 MW</td>
-<td align="center">
-<br>interpolation linéaire</td>
-</tr>
-<tr>
-<td align="center">
-<br>P = 1 MW</td>
-<td align="center">
-<br>20 %</td>
-</tr>
-<tr>
-<td align="center">
-<br>1MW &lt; P ≤ 3 MW</td>
-<td align="center" rowspan="2" valign="middle">
-<br>interpolation linéaire</td>
-<td align="center">
-<br>Interpolation linéaire</td>
-</tr>
-<tr>
-<td align="center">
-<br>3 MW &lt; P &lt; 5 MW</td>
-<td align="center">
-<br>Pas de réfaction</td>
-</tr>
-<tr>
-<td align="center">
-<br>P ≥ 5 MW</td>
-<td align="center" colspan="2" valign="middle">
-<br>Pas de réfaction</td>
-</tr>
-</tbody></table>
-"""
-
-testTable2 = """
-<table border="1">
-<tbody><tr>
-<th>
-<br>Puissance de l'installation (P)</th>
-<th>
-<br>Réfaction sur les ouvrages propres tels que définis
-      <br>
-    au <br>
-<a href="/affichCodeArticle.do?cidTexte=LEGITEXT000023983208&amp;idArticle=LEGIARTI000031749137&amp;dateTexte=&amp;categorieLien=cid" rel="eli:cites">premier alinéa de l'article D. 342-22
-    du code de l'énergie</a>
-</th>
-<th>
-<br>Réfaction sur la quote part, telle que définie
-      <br>
-    au <br>
-<a href="/affichCodeArticle.do?cidTexte=LEGITEXT000023983208&amp;idArticle=LEGIARTI000031749137&amp;dateTexte=&amp;categorieLien=cid" rel="eli:cites">deuxième alinéa de l'article D. 342-22
-    du code de l'énergie</a>
-</th>
-</tr>
-<tr>
-<td align="center" rowspan="3" colspan="2">
-<br>40 %</td>
-<td align="center">
-<br>40 %</td>
-</tr>
-<tr>
-<td align="center">
-<br>interpolation linéaire</td>
-</tr>
-<tr>
-<td align="center">
-<br>20 %</td>
-</tr>
-<tr>
-<td align="center">
-<br>1MW &lt; P ≤ 3 MW</td>
-<td align="center" rowspan="2" valign="middle">
-<br>interpolation linéaire</td>
-<td align="center">
-<br>Interpolation linéaire</td>
-</tr>
-<tr>
-<td align="center">
-<br>3 MW &lt; P &lt; 5 MW</td>
-<td align="center">
-<br>Pas de réfaction</td>
-</tr>
-<tr>
-<td align="center">
-<br>P ≥ 5 MW</td>
-<td align="center" colspan="2" valign="middle">
-<br>Pas de réfaction</td>
-</tr>
-</tbody></table>
-"""
-
-parser = tableParser()
-results = parser.toJson(testTable2)
-print(results)

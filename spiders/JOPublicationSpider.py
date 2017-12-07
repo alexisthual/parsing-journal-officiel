@@ -7,6 +7,7 @@ from functools import partial
 from bs4 import BeautifulSoup
 
 from utils.textParser import textParser
+from utils.tableParser import tableParser
 
 
 class JOPublicationSpider(scrapy.Spider):
@@ -14,27 +15,27 @@ class JOPublicationSpider(scrapy.Spider):
 
     def __init__(self, *args, **kwargs):
         super(JOPublicationSpider, self).__init__(*args, **kwargs)
-
         self.start_urls = [kwargs.get('data')['start_url']]
         self.date = kwargs.get('data')['date']
         self.array = []
         self.verbose = False
-
+        self.tableParser = tableParser()
 
     # PARSING THE PUBLICATION'S SUMMARY
 
-
     def handleLeaf(self, leaf, path=[]):
         """
-        Receives a potential leaf. In case it is an actual leaf,
-        compute information relative to this leaf and add it to the output
-        dictionary.
+        Input: Scrapy <li> tag (potential leaf of the concept tree).
+        Output: dict containing information about the leaf.
         """
+
         nb = leaf.css('.numeroTexte::text').extract_first()
         text = leaf.xpath('./a/text()').extract_first()
         href = leaf.css('a::attr(href)').extract_first()
+
         if self.verbose:
             print(''.join(['\t' for _ in range(len(path))]) + 'LI A: ' + (text[0:20] if text else 'None'))
+
         if nb and text:
             self.array.append({
                 'i': int(nb),
@@ -45,16 +46,20 @@ class JOPublicationSpider(scrapy.Spider):
 
     def recursiveLI(self, path, li, i, n):
         """
-        There are two kinds of <li> : nodes and leaves.
-        In case it is a node, compute the title, add it to the path
+        Input: a scrapy <li> tag.
+        Output:
+        * In case it is a node, compute the title, add it to the path
         and call recursiveUL on the first <ul> of this <li>.
-        Otherwise, call handleLeaf on this leaf.
+        * Otherwise, call handleLeaf on this leaf.
+
         To tell apart leaves and nodes, simply check if the <li> has a title.
         If it does, then it's a node.
         Important: if i == n-1 then this <li> is the last of it's <ul> and
         one therefore needs to pop path.
         """
+
         titre = li.css('h3::text').extract_first()
+
         if not titre:
             titre = li.css('h4::text').extract_first()
             if not titre:
@@ -75,8 +80,10 @@ class JOPublicationSpider(scrapy.Spider):
 
     def recursiveUL(self, path, ul):
         """
-        Receives an <ul> and iterates through it's direct <li> tags.
+        Input: a Scrapy <ul> tag.
+        Output: call to recursiveLI for each of the direct <li> tags of the input.
         """
+
         if self.verbose:
             print(''.join(['\t' for _ in range(len(path))]) + 'UL: ' + str(path))
         LIs = ul.xpath('./li')
@@ -84,24 +91,20 @@ class JOPublicationSpider(scrapy.Spider):
         for i, li in enumerate(LIs):
             self.recursiveLI(path, li, i, len(LIs))
 
-    def parseText(self, text):
-        rx = re.compile('\W+')
-        parsedText = rx.sub(' ', text).strip()
-
-        return parsedText
-
     def parse(self, response):
         """
-        Summaries from the Journal Officiel don't follow a clean structure,
-        which prevents us from implementing a straitforward recursion.
+        Input: Scrapy response.
+        Output: calls to parseArticle on each of the article links
+        found in the input. One also saves all links in a separated JSON file.
         """
 
-        # Check if the url actually leads to a JO edition.
+        # Check if the url actually leads to a JO edition and
+        # if not, then stop exploring.
         if len(response.css('.sommaire').extract()) == 0:
             return
 
         self.array = []
-        mainTitle = self.parseText(response.css('.titleJO::text').extract_first())
+        mainTitle = textParser.parseTitle(response.css('.titleJO::text').extract_first())
         mainUl = response.css('.sommaire > ul')
         mainTag = response.css('.sommaire > ul > li')
 
@@ -154,13 +157,19 @@ class JOPublicationSpider(scrapy.Spider):
                 callback=partial(self.parseArticle, followLink['i'])
             )
 
-        # yield data
-
 
     # PARSING THE PUBLICATION'S ARTICLES
 
+    # Inside an article, find the relevant pieces of text
+    # and parse them correctly.
+
 
     def enrichLinks(self, div):
+        """
+        Input: Scrapy <div> tag.
+        Output: dict with information concerning the input tag.
+        """
+
         links = div.xpath('.//a')
 
         for a in links:
@@ -171,29 +180,61 @@ class JOPublicationSpider(scrapy.Spider):
                 'href': href,
             })
 
+    def parseTables(self, soup):
+        """
+        Input: BeatifulSoup soup.
+        Output:
+            * soup with <table> tags replaced by their hash value
+            * a dict mapping each <table> tag's hash value to the parsed version
+            of that table.
+        """
+
+        parsedTables = {}
+
+        for table in soup.findAll('table'):
+            parsedTable = self.tableParser.toJson(table)
+            h = hash(str(parsedTable))
+            parsedTables[h] = parsedTable
+            table.replaceWith('parsedTable#' + str(h))
+
+        return soup, parsedTables
+
     def scrapMainDiv(self, div):
+        """
+        Input: Scrapy <div> tag.
+        Output: parses the input div by finding the entete first and then the
+        rest of the article.
+        """
+
         # Collect Entete
         enteteDiv = div.xpath('./div[contains(@class, \'enteteTexte\')]')
         enteteSoup = BeautifulSoup(enteteDiv.extract_first(), 'html.parser')
         self.entete = enteteSoup.get_text()
         # Collect links inside entete
         self.enrichLinks(enteteDiv)
+
         if self.verbose:
             print(self.entete)
 
         # Collect remaining text
         articleDiv = div.xpath('./div[2]')
         articleSoup = BeautifulSoup(articleDiv.extract_first(), 'html.parser')
+        # Parse all tables inside the main div
+        articleSoup, parsedTables = self.parseTables(articleSoup)
         self.article = articleSoup.get_text()
+        self.parsedTables = parsedTables
         # Collect links inside entete
         self.enrichLinks(articleDiv)
+
         if self.verbose:
             print(self.article)
 
     def parseArticle(self, textNumber, response):
         """
-        Doc
+        Input: article index in publication summary, Scrapy response.
+        Output: writes parsed version of the article to a specific JSON file.
         """
+
         # A priori, the div we are interested in is the second div
         # which is a direct children of div.data
         # For "safety" reasons, we chose to check them all.
@@ -225,6 +266,7 @@ class JOPublicationSpider(scrapy.Spider):
             'entete': self.entete,
             'article': self.article,
             'links': self.links,
+            'tables': self.parsedTables,
         }
 
         path = 'output/' + '-'.join(self.date) + '/articles/'
@@ -235,5 +277,3 @@ class JOPublicationSpider(scrapy.Spider):
 
         with open(os.path.join(path, filename), 'w+') as outfile:
             json.dump(data, outfile)
-
-        yield data

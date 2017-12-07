@@ -1,1 +1,4 @@
 scrapping/__pycache__/
+output/*
+*/.DS_Store
+*/__pycache__/*

@@ -1,11 +1,26 @@
 import re
 
 class textParser:
-    # def __init__(self):
-    #     pass
+    @staticmethod
+    def parseTitle(text):
+        """
+        Input: string.
+        Output: parsed string.
+        """
+
+        # Removes special characters and spaces
+        rx = re.compile('\W+')
+        parsedText = rx.sub(' ', text).strip()
+
+        return parsedText
 
     @staticmethod
     def parseText(text, noNewLine=False):
+        """
+        Input: string.
+        Output: parsed string.
+        """
+
         parsedText = text
 
         if noNewLine:
