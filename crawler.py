@@ -13,7 +13,7 @@ process = CrawlerProcess({
     'USER_AGENT': 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)',
 })
 
-# TODO: run spiders in batches
-# process.crawl(JOPublicationSpider, data=meta2)
+# TODO: run spiders in batches so as to parallelise computation
 process.crawl(JOPublicationSpider, data=meta)
+# process.crawl(JOPublicationSpider, data=meta2)
 process.start()
