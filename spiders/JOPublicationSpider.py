@@ -15,8 +15,8 @@ class JOPublicationSpider(scrapy.Spider):
 
     def __init__(self, *args, **kwargs):
         super(JOPublicationSpider, self).__init__(*args, **kwargs)
-        self.start_urls = [kwargs.get('data')['start_url']]
-        self.date = kwargs.get('data')['date']
+        self.meta = kwargs.get('meta')
+        self.start_urls = kwargs.get('meta').keys()
         self.array = []
         self.verbose = False
         self.tableParser = tableParser()
@@ -140,9 +140,12 @@ class JOPublicationSpider(scrapy.Spider):
         # Testing that the retreived data is somewhat consistent with
         # what we would expect (ie checking that the assumptions that
         # we are making on the page's structure seems correct).
-        assert(len(self.array) == len(allProbableArticles))
+        assert(
+            len(self.array) == len(allProbableArticles),
+            'Missing articles in summary {0}'.format(str(self.meta[response.url]))
+        )
 
-        path = 'output/' + '-'.join(self.date) + '/'
+        path = 'output/{0}'.format(str(self.meta[response.url]))
         filename = 'summary.json'
 
         if not os.path.exists(path):
@@ -154,7 +157,7 @@ class JOPublicationSpider(scrapy.Spider):
         for followLink in data['array']:
             yield scrapy.Request(
                 'https://www.legifrance.gouv.fr' + followLink['href'],
-                callback=partial(self.parseArticle, followLink['i'])
+                callback=partial(self.parseArticle, response.url, followLink['i'])
             )
 
 
@@ -229,7 +232,7 @@ class JOPublicationSpider(scrapy.Spider):
         if self.verbose:
             print(self.article)
 
-    def parseArticle(self, textNumber, response):
+    def parseArticle(self, parentUrl, textNumber, response):
         """
         Input: article index in publication summary, Scrapy response.
         Output: writes parsed version of the article to a specific JSON file.
@@ -249,7 +252,10 @@ class JOPublicationSpider(scrapy.Spider):
                     print('LOG: div.data correctly found')
                 mainDiv = div
 
-        assert(mainDiv)
+        assert(
+            mainDiv,
+            'Missing mainDiv in {0}: {1}'.format(str(self.meta[parentUrl]), textNumber)
+        )
 
         self.scrapMainDiv(mainDiv)
 
@@ -257,8 +263,14 @@ class JOPublicationSpider(scrapy.Spider):
         textToParse = list(map(textParser.parseText, textToParse))
         [self.entete, self.article] = textToParse
 
-        assert('NOR' in self.entete)
-        assert('ELI' in self.entete)
+        assert(
+            'NOR' in self.entete,
+            'Missing NOR in article {0}: {1}'.format(str(self.meta[parentUrl]), textNumber)
+        )
+        assert(
+            'ELI' in self.entete,
+            'Missing ELI in article {0}: {1}'.format(str(self.meta[parentUrl]), textNumber)
+        )
         assert(len(self.article) > 15)
 
         data = {
@@ -269,7 +281,7 @@ class JOPublicationSpider(scrapy.Spider):
             'tables': self.parsedTables,
         }
 
-        path = 'output/' + '-'.join(self.date) + '/articles/'
+        path = 'output/{0}/articles/'.format(str(self.meta[parentUrl]))
         filename = str(textNumber) + '.json'
 
         if not os.path.exists(path):

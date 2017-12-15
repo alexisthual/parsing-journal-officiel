@@ -1,5 +1,7 @@
 # Use
-Run `python crawler.py` from the root folder to start parsing.
+* Run `python crawl.py` from the root folder to start parsing.
+One can use the `-c` option so as to remove already existing scrapped json files.
+* Run `python populateES.py` from the root folder in order to populate your running ES instance with previously parsed data.
 
 # Structure
 * URLs to visit are generated in `crawler.py`: they are supposed to lead to JO publication summaries.
