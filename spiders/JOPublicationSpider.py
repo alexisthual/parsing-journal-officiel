@@ -5,6 +5,7 @@ import scrapy
 from copy import copy
 from functools import partial
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 from utils.textParser import textParser
 from utils.tableParser import tableParser
@@ -15,11 +16,30 @@ class JOPublicationSpider(scrapy.Spider):
 
     def __init__(self, *args, **kwargs):
         super(JOPublicationSpider, self).__init__(*args, **kwargs)
+
         self.meta = kwargs.get('meta')
-        self.start_urls = kwargs.get('meta').keys()
-        self.array = []
+        self.urls = self.meta['urls']
+        self.start_urls = self.urls.keys()
+
+        self.logsFileName = self.meta['logFileName']
+        self.logFormat = '{0}/{1}|{2}|{3}'
         self.verbose = False
+
+        self.array = []
         self.tableParser = tableParser()
+
+    def handleAssertion(self, boolean, warningMessage, outputFile=None):
+        outputFileName = outputFile if outputFile else self.logsFileName
+
+        try:
+            assert(boolean)
+        except AssertionError:
+            print(warningMessage)
+            # print('AssertionError: {0}'.format(warningMessage))
+            if outputFileName:
+                with open(outputFileName, 'a+') as outfile:
+                    # print('Writting to {0}...'.format(outputFileName))
+                    outfile.write('{0}|{1}\n'.format(str(datetime.now()), warningMessage))
 
     # PARSING THE PUBLICATION'S SUMMARY
 
@@ -140,12 +160,12 @@ class JOPublicationSpider(scrapy.Spider):
         # Testing that the retreived data is somewhat consistent with
         # what we would expect (ie checking that the assumptions that
         # we are making on the page's structure seems correct).
-        assert(
+        self.handleAssertion(
             len(self.array) == len(allProbableArticles),
-            'Missing articles in summary {0}'.format(str(self.meta[response.url]))
+            self.logFormat.format(str(self.urls[response.url]), '', 'Missing articles', response.url)
         )
 
-        path = 'output/{0}'.format(str(self.meta[response.url]))
+        path = 'output/{0}'.format(str(self.urls[response.url]))
         filename = 'summary.json'
 
         if not os.path.exists(path):
@@ -252,40 +272,44 @@ class JOPublicationSpider(scrapy.Spider):
                     print('LOG: div.data correctly found')
                 mainDiv = div
 
-        assert(
-            mainDiv,
-            'Missing mainDiv in {0}: {1}'.format(str(self.meta[parentUrl]), textNumber)
+        self.handleAssertion(
+            (mainDiv is not None),
+            self.logFormat.format(str(self.urls[parentUrl]), textNumber, 'Missing mainDiv', response.url)
         )
 
-        self.scrapMainDiv(mainDiv)
+        if mainDiv is not None:
+            self.scrapMainDiv(mainDiv)
 
-        textToParse = [self.entete, self.article]
-        textToParse = list(map(textParser.parseText, textToParse))
-        [self.entete, self.article] = textToParse
+            textToParse = [self.entete, self.article]
+            textToParse = list(map(textParser.parseText, textToParse))
+            [self.entete, self.article] = textToParse
 
-        assert(
-            'NOR' in self.entete,
-            'Missing NOR in article {0}: {1}'.format(str(self.meta[parentUrl]), textNumber)
-        )
-        assert(
-            'ELI' in self.entete,
-            'Missing ELI in article {0}: {1}'.format(str(self.meta[parentUrl]), textNumber)
-        )
-        assert(len(self.article) > 15)
+            self.handleAssertion(
+                'NOR' in self.entete,
+                self.logFormat.format(str(self.urls[parentUrl]), textNumber, 'Missing NOR', response.url)
+            )
+            self.handleAssertion(
+                'ELI' in self.entete,
+                self.logFormat.format(str(self.urls[parentUrl]), textNumber, 'Missing ELI', response.url)
+            )
+            self.handleAssertion(
+                len(self.article) > 15,
+                self.logFormat.format(str(self.urls[parentUrl]), textNumber, 'Short article', response.url)
+            )
 
-        data = {
-            'url': response.url,
-            'entete': self.entete,
-            'article': self.article,
-            'links': self.links,
-            'tables': self.parsedTables,
-        }
+            data = {
+                'url': response.url,
+                'entete': self.entete,
+                'article': self.article,
+                'links': self.links,
+                'tables': self.parsedTables,
+            }
 
-        path = 'output/{0}/articles/'.format(str(self.meta[parentUrl]))
-        filename = str(textNumber) + '.json'
+            path = 'output/{0}/articles/'.format(str(self.urls[parentUrl]))
+            filename = str(textNumber) + '.json'
 
-        if not os.path.exists(path):
-            os.makedirs(path)
+            if not os.path.exists(path):
+                os.makedirs(path)
 
-        with open(os.path.join(path, filename), 'w+') as outfile:
-            json.dump(data, outfile)
+            with open(os.path.join(path, filename), 'w+') as outfile:
+                json.dump(data, outfile)

@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 import getopt
 import os
 import scrapy
@@ -8,12 +8,18 @@ import sys
 
 from spiders.JOPublicationSpider import JOPublicationSpider
 
-
 def parseUrl(date):
     url = 'https://www.legifrance.gouv.fr/eli/jo/'
     return url + '/'.join(list(map(str, [date.year, date.month, date.day])))
 
 def main(argv):
+    # Create output folders in case they don't exist
+    dirList = ['./logs', './output']
+
+    for dirName in dirList:
+        if not os.path.isdir(dirName):
+            os.makedirs(dirName)
+
     # Add cleaning option for CLI
     try:
         opts, args = getopt.getopt(argv[1:], 'c', ['clean='])
@@ -37,18 +43,25 @@ def main(argv):
     settings.set('COOKIES_ENABLED', False)
     settings.set('REDIRECT_ENABLED', False)
     settings.set('LOG_LEVEL', 'INFO')
+    # Prevent loading errors from the server:
+    settings.set('DOWNLOAD_DELAY', 0.1)
 
     process = CrawlerProcess(settings)
 
+    # Parallelize main spider
     batches = 3
-    daysPerBatch = 10
+    daysPerBatch = 5
+    logFileName = './logs/{0}.txt'.format(str(datetime.now()))
 
     for batch in range(batches):
         dates = [singleDate for singleDate in ((date(2017, 12, 5) - batch * timedelta(daysPerBatch)) - timedelta(day) for day in range(daysPerBatch))]
-        meta = {}
+        meta = {
+            'urls': {},
+            'logFileName': logFileName,
+        }
 
         for d in dates:
-            meta[parseUrl(d)] = d
+            meta['urls'][parseUrl(d)] = d
 
         process.crawl(JOPublicationSpider, meta=meta)
 
