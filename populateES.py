@@ -5,8 +5,16 @@ from elasticsearch import Elasticsearch
 
 
 class dbManager:
-    def __init__(self):
+    def __init__(self, overwriteIndices=False, maxSummaries=None):
         self.es = Elasticsearch()
+        self.maxSummaries = maxSummaries
+
+        if overwriteIndices:
+            self.deleteIndices()
+
+    def deleteIndices(self):
+        self.es.indices.delete(index='summary', ignore=400)
+        self.es.indices.delete(index='article', ignore=400)
 
     def initESIndexes(self):
         self.es.indices.create(index='summary', ignore=400)
@@ -16,6 +24,7 @@ class dbManager:
         rootPath = os.path.join(os.getcwd(), 'output/')
 
         # Iterate through every JO publication
+        n = 0
         for fileName in tqdm(os.listdir(rootPath)):
             folderPath = os.path.join(rootPath, fileName)
 
@@ -36,6 +45,11 @@ class dbManager:
                         articleData = json.load(articleJsonData)
                         self.es.index(index='article', doc_type='doc', body=articleData)
 
-dbm = dbManager()
-dbm.initESIndexes()
-dbm.populateDB()
+            n += 1
+            if self.maxSummaries and n > self.maxSummaries:
+                break
+
+if __name__ == '__main__':
+    dbm = dbManager(overwriteIndices=True, maxSummaries=5)
+    dbm.initESIndexes()
+    dbm.populateDB()
