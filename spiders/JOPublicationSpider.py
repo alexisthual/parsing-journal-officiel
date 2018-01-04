@@ -284,12 +284,17 @@ class JOPublicationSpider(scrapy.Spider):
             textToParse = list(map(textParser.parseText, textToParse))
             [self.entete, self.article] = textToParse
 
+            nor = re.search('NOR\:\s*([A-Z0-9]*)\n', self.entete).groups()
+            eli = re.search('ELI\:\s*([A-Z0-9]*)\n', self.entete).groups()
+            self.nor = nor[0] if len(nor) > 1 else ''
+            self.eli = eli[0] if len(eli) > 1 else ''
+
             self.handleAssertion(
-                'NOR' in self.entete,
+                len(self.nor) > 0,
                 self.logFormat.format(str(self.urls[parentUrl]), textNumber, 'Missing NOR', response.url)
             )
             self.handleAssertion(
-                'ELI' in self.entete,
+                len(self.eli) > 0,
                 self.logFormat.format(str(self.urls[parentUrl]), textNumber, 'Missing ELI', response.url)
             )
             self.handleAssertion(
@@ -300,6 +305,8 @@ class JOPublicationSpider(scrapy.Spider):
             data = {
                 'url': response.url,
                 'entete': self.entete,
+                'NOR': self.nor,
+                'ELI': self.eli,
                 'article': self.article,
                 'links': self.links,
                 'tables': self.parsedTables,
