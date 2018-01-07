@@ -5,3 +5,7 @@ output/*
 tests/*
 /test.py
 logs/*
+*.xml
+venv/*
+*.pyc
+short/*

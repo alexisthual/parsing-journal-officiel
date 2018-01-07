@@ -10,7 +10,11 @@ class dbManager:
         self.maxSummaries = maxSummaries
 
         if overwriteIndices:
-            self.deleteIndices()
+            try:
+                self.deleteIndices()
+            except Exception as e:
+                print("Error raised while trying to delete indices...")
+                print(e)
 
     def deleteIndices(self):
         self.es.indices.delete(index='summary', ignore=400)
@@ -37,6 +41,7 @@ class dbManager:
                     self.es.index(index='summary', doc_type='doc', body=summaryData)
 
                 articlesPath = os.path.join(folderPath, 'articles/')
+                print("\nCurrently going over {} \n".format(articlesPath))
 
                 # Iterate through every article of the current publication
                 for articleFileName in tqdm(os.listdir(articlesPath)):
@@ -44,10 +49,12 @@ class dbManager:
                     with open(os.path.join(articlesPath, articleFileName)) as articleJsonData:
                         articleData = json.load(articleJsonData)
                         self.es.index(index='article', doc_type='doc', body=articleData)
+                        print(articleData)
 
             n += 1
             if self.maxSummaries and n > self.maxSummaries:
                 break
+
 
 if __name__ == '__main__':
     dbm = dbManager(overwriteIndices=True, maxSummaries=5)
