@@ -89,7 +89,16 @@ class tableParser:
                 parsedRow = self.parseRow(row, 'td')
                 self.rows.append(parsedRow)
 
+        # Creates hash for current table instance
+        self.hash = hash(
+            str({
+                'thRows': self.th,
+                'tdRows': self.rows
+            })
+        )
+
         return {
+            'hash': self.hash,
             'thRows': self.th,
             'tdRows': self.rows
         }

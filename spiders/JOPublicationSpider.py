@@ -35,10 +35,8 @@ class JOPublicationSpider(scrapy.Spider):
             assert(boolean)
         except AssertionError:
             print(warningMessage)
-            # print('AssertionError: {0}'.format(warningMessage))
             if outputFileName:
                 with open(outputFileName, 'a+') as outfile:
-                    # print('Writting to {0}...'.format(outputFileName))
                     outfile.write('{0}|{1}\n'.format(str(datetime.now()), warningMessage))
 
     # PARSING THE PUBLICATION'S SUMMARY
@@ -198,27 +196,34 @@ class JOPublicationSpider(scrapy.Spider):
         for a in links:
             text = a.xpath('./text()').extract_first()
             href = a.xpath('./@href').extract_first()
-            self.links.append({
-                'text': text,
-                'href': href,
-            })
+
+            cid = []
+            if href:
+                cid = re.search('cidTexte\=(.*?)(?=\&)', href)
+                cid = cid.groups() if cid else []
+
+            if (('En savoir plus sur cet article' not in text)
+                and len(cid) > 0):
+                self.links.append({
+                    'text': text,
+                    'href': href,
+                    'cid': cid[0],
+                })
 
     def parseTables(self, soup):
         """
         Input: BeatifulSoup soup.
         Output:
             * soup with <table> tags replaced by their hash value
-            * a dict mapping each <table> tag's hash value to the parsed version
-            of that table.
+            * an array of parsed <table> tags
         """
 
-        parsedTables = {}
+        parsedTables = []
 
         for table in soup.findAll('table'):
             parsedTable = self.tableParser.toJson(table)
-            h = hash(str(parsedTable))
-            parsedTables[h] = parsedTable
-            table.replaceWith('parsedTable#' + str(h))
+            parsedTables.append(parsedTable)
+            table.replaceWith('parsedTable#' + str(parsedTable['hash']))
 
         return soup, parsedTables
 
@@ -284,29 +289,52 @@ class JOPublicationSpider(scrapy.Spider):
             textToParse = list(map(textParser.parseText, textToParse))
             [self.entete, self.article] = textToParse
 
-            nor = re.search('NOR\:\s*([A-Z0-9]*)\n', self.entete).groups()
-            eli = re.search('ELI\:\s*([A-Z0-9]*)\n', self.entete).groups()
+            # Previous regex: NOR\:\s*([A-Z0-9]*)\n
+            nor = re.search('NOR\:\s*(.*?)(?=[\s\n\b$])', self.entete)
+            nor = nor.groups() if nor else []
             self.nor = nor[0] if len(nor) > 1 else ''
+
+            eli = re.search('ELI\:\s*(.*?)(?=[\s\n\b$])', self.entete)
+            eli = eli.groups() if eli else []
             self.eli = eli[0] if len(eli) > 1 else ''
 
-            self.handleAssertion(
-                len(self.nor) > 0,
-                self.logFormat.format(str(self.urls[parentUrl]), textNumber, 'Missing NOR', response.url)
-            )
-            self.handleAssertion(
-                len(self.eli) > 0,
-                self.logFormat.format(str(self.urls[parentUrl]), textNumber, 'Missing ELI', response.url)
-            )
-            self.handleAssertion(
-                len(self.article) > 15,
-                self.logFormat.format(str(self.urls[parentUrl]), textNumber, 'Short article', response.url)
-            )
+            cid = re.search('cidTexte\=(.*?)(?=\&)', response.url)
+            cid = cid.groups() if cid else []
+            self.cid = cid[0] if len(cid) > 1 else ''
+
+            # Verify that a few key assumptions are holding;
+            # if not, print a warning message in the logs.
+            assumptions = [
+                [
+                    len(self.nor) == 0,
+                    'Missing NOR'
+                ], [
+                    len(self.eli) == 0,
+                    'Missing ELI'
+                ], [
+                    len(self.cid) == 0,
+                    'Missing cidTexte'
+                ], [
+                    len(self.article) > 15,
+                    'Short Article'
+                ],
+            ]
+
+            for assumption in assumptions:
+                self.handleAssertion(
+                    assumption[0],
+                    self.logFormat.format(
+                        str(self.urls[parentUrl]), textNumber, assumption[1],
+                        response.url
+                    )
+                )
 
             data = {
                 'url': response.url,
                 'entete': self.entete,
                 'NOR': self.nor,
                 'ELI': self.eli,
+                'cid': self.cid,
                 'article': self.article,
                 'links': self.links,
                 'tables': self.parsedTables,
