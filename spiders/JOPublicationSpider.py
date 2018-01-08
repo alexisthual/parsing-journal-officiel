@@ -289,30 +289,32 @@ class JOPublicationSpider(scrapy.Spider):
             textToParse = list(map(textParser.parseText, textToParse))
             [self.entete, self.article] = textToParse
 
-            # Previous regex: NOR\:\s*([A-Z0-9]*)\n
+            # Previous expressions:
+            # NOR\:\s*([A-Z0-9]*)\n
+            # ELI\:\s*(.*?)(?=[\s\n\b$])
             nor = re.search('NOR\:\s*(.*?)(?=[\s\n\b$])', self.entete)
             nor = nor.groups() if nor else []
-            self.nor = nor[0] if len(nor) > 1 else ''
+            self.nor = nor[0] if len(nor) > 0 else ''
 
-            eli = re.search('ELI\:\s*(.*?)(?=[\s\n\b$])', self.entete)
+            eli = re.search('ELI\:\s*(.*?)(?=$|\n|\s\n)', self.entete)
             eli = eli.groups() if eli else []
-            self.eli = eli[0] if len(eli) > 1 else ''
+            self.eli = eli[0] if len(eli) > 0 else ''
 
             cid = re.search('cidTexte\=(.*?)(?=\&)', response.url)
             cid = cid.groups() if cid else []
-            self.cid = cid[0] if len(cid) > 1 else ''
+            self.cid = cid[0] if len(cid) > 0 else ''
 
             # Verify that a few key assumptions are holding;
             # if not, print a warning message in the logs.
             assumptions = [
                 [
-                    len(self.nor) == 0,
+                    len(self.nor) != 0,
                     'Missing NOR'
                 ], [
-                    len(self.eli) == 0,
+                    len(self.eli) != 0,
                     'Missing ELI'
                 ], [
-                    len(self.cid) == 0,
+                    len(self.cid) != 0,
                     'Missing cidTexte'
                 ], [
                     len(self.article) > 15,
