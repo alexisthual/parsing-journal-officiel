@@ -1,11 +1,11 @@
 scrapping/__pycache__/
+output/*
 */.DS_Store
 */__pycache__/*
+tests/*
 /test.py
+logs/*
 *.xml
 venv/*
 *.pyc
-tests/*
-logs/*
-output/*
 short/*
