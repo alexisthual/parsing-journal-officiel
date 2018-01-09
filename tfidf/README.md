@@ -1,4 +1,5 @@
 The simplest TF-IDF library imaginable.
+(SOURCE: https://github.com/hrs/python-tf-idf)
 
 ### Usage
 
