@@ -1,5 +1,7 @@
+SOURCE: https://github.com/hrs/python-tf-idf
+Only the test\_tfidf.py and tfidf.py are part of the original package
+
 The simplest TF-IDF library imaginable.
-(SOURCE: https://github.com/hrs/python-tf-idf)
 
 ### Usage
 
