@@ -1,4 +1,5 @@
 import os
+import io
 import json
 from tqdm import tqdm
 from tfidf.tfidf import TfIdf
@@ -11,12 +12,47 @@ class TFIDFmanager():
         self.tfidf_articles = TfIdf()
         self.summaries = ArticleDictionary()
         self.articles = ArticleDictionary()
+        self.excluded_vocabulary = []
+        f = io.open('tfidf/stopwords.txt', 'r', encoding='utf8')
+        self.stopwords = f.read().splitlines()
+
+    def describe_yourself(self):
+        s = sorted(self.tfidf_summaries.corpus_dict.items(), key=lambda x: x[1], reverse=True)
+        a = sorted(self.tfidf_articles.corpus_dict.items(), key=lambda x: x[1], reverse=True)
+
+        print("Current corpus: {} summaries [{} words] and {} articles [{} words]".format(
+            len(self.summaries.content), len(self.tfidf_summaries.corpus_dict.items()),
+            len(self.articles.content), len(self.tfidf_articles.corpus_dict.items())))
+        print("\nList of words in summaries' corpus")
+        print(s)
+        print("\nList of words in articles' corpus")
+        print(a)
+        print("\nList of current stopwords")
+        print(self.stopwords)
+
+    def generate_excluded_vocabulary(self):
+        # total_words = sum(self.tfidf_articles.corpus_dict.values())
+        s = sorted(self.tfidf_articles.corpus_dict.items(), key=lambda x: x[1], reverse=True)
+        c = 0
+        are_you_sure = False
+        with io.open('tfidf/stopwords.txt', 'a', encoding='utf8') as f:
+            if are_you_sure:
+                for w in s:
+                    # number is chosen by looking at the sorted values
+                    if w[1] > 605:
+                        f.write(w[0]+"\n")
+                        c += 1
+        print("Added {} words to stopwords!".format(c))
 
     def preprocess_text(self, array):
         """
         Input: array of words
         Output: array of words filtered so that we remove the non relevant ones (and tokenize?)
         """
+        initial_number = len(array)
+        array = [word.lower() for word in array if word not in self.stopwords and word.lower() not in self.stopwords and not word.isdigit()]
+        final_number = len(array)
+        # print("Preprocessing: reduced number of words from {} to {}".format(initial_number, final_number))
         return array
 
     def find_k_closest(self, string, k):
@@ -49,7 +85,7 @@ class TFIDFmanager():
         for fileName in tqdm(os.listdir(rootPath)):
             full_review = True
             folderPath = os.path.join(rootPath, fileName)
-            print("\nCurrently going over {} \n".format(folderPath))
+            print("\n\nCurrently going over {} \n".format(folderPath))
 
             if os.path.isdir(folderPath):
                 m += 1
@@ -90,7 +126,16 @@ class TFIDFmanager():
 if __name__ == '__main__':
     tfidf_manager = TFIDFmanager()
     tfidf_manager.go_through_data()
-    ex_string_1 = 'article_2017-12-05_66'
-    ex_string_2 = 'summary_2017-12-05'
-    tfidf_manager.find_k_closest(ex_string_1, 5)
-    tfidf_manager.find_k_closest(ex_string_2, 5)
+
+    # this is to add words to the stopwords list
+    # tfidf_manager.generate_excluded_vocabulary()
+
+    # examples of retrieving k closest for article and summary
+    ex = False
+    if ex:
+        ex_string_1 = 'article_2017-12-05_66'
+        ex_string_2 = 'summary_2017-12-05'
+        tfidf_manager.find_k_closest(ex_string_1, 5)
+        tfidf_manager.find_k_closest(ex_string_2, 5)
+
+    tfidf_manager.describe_yourself()
