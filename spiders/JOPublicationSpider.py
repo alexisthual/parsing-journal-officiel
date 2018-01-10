@@ -31,12 +31,16 @@ class JOPublicationSpider(scrapy.Spider):
     def handleAssertion(self, boolean, warningMessage, outputFile=None):
         outputFileName = outputFile if outputFile else self.logsFileName
 
+        # not the best
+        outputFileName = '{}_{}h{}.txt'.format(outputFileName[:17], outputFileName[18:20], outputFileName[21:23])
+
         try:
             assert(boolean)
         except AssertionError:
             print(warningMessage)
             # print('AssertionError: {0}'.format(warningMessage))
             if outputFileName:
+                outputFileName = outputFileName[2:]
                 with open(outputFileName, 'a+') as outfile:
                     # print('Writting to {0}...'.format(outputFileName))
                     outfile.write('{0}|{1}\n'.format(str(datetime.now()), warningMessage))
@@ -217,7 +221,7 @@ class JOPublicationSpider(scrapy.Spider):
         for table in soup.findAll('table'):
             parsedTable = self.tableParser.toJson(table)
             h = hash(str(parsedTable))
-            parsedTables[h] = parsedTable
+            # parsedTables[h] = parsedTable
             table.replaceWith('parsedTable#' + str(h))
 
         return soup, parsedTables
@@ -265,6 +269,9 @@ class JOPublicationSpider(scrapy.Spider):
         dataDiv = response.css('.data')
         mainDiv = None
 
+        nor_search_string = 'NOR\:\s*([A-Z0-9]*)'
+        eli_search_string = 'ELI\:\s(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+
         for div in dataDiv.xpath('./div'):
             hasEntete = len(div.xpath('./div[contains(@class, \'enteteTexte\')]')) == 1
             if hasEntete:
@@ -284,10 +291,14 @@ class JOPublicationSpider(scrapy.Spider):
             textToParse = list(map(textParser.parseText, textToParse))
             [self.entete, self.article] = textToParse
 
-            nor = re.search('NOR\:\s*([A-Z0-9]*)\n', self.entete).groups()
-            eli = re.search('ELI\:\s*([A-Z0-9]*)\n', self.entete).groups()
-            self.nor = nor[0] if len(nor) > 1 else ''
-            self.eli = eli[0] if len(eli) > 1 else ''
+            try:
+                nor = re.search(nor_search_string, self.entete).group()
+                eli = re.search(eli_search_string, self.entete).group()
+                self.nor = nor[5:]
+                self.eli = eli[5:]
+            except AttributeError:
+                self.nor = ''
+                self.eli = ''
 
             self.handleAssertion(
                 len(self.nor) > 0,
