@@ -10,7 +10,11 @@ class dbManager:
         self.maxSummaries = maxSummaries
 
         if overwriteIndices:
-            self.deleteIndices()
+            try:
+                self.deleteIndices()
+            except Exception as e:
+                print("Error raised while trying to delete indices...")
+                print(e)
 
     def deleteIndices(self):
         self.es.indices.delete(index='summary', ignore=[400, 404])
@@ -53,6 +57,7 @@ class dbManager:
                 if self.maxSummaries and n == self.maxSummaries:
                     pbar.close()
                     break
+
 
 if __name__ == '__main__':
     dbm = dbManager(overwriteIndices=True, maxSummaries=5)

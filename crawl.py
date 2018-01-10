@@ -8,9 +8,11 @@ import sys
 
 from spiders.JOPublicationSpider import JOPublicationSpider
 
+
 def parseUrl(date):
     url = 'https://www.legifrance.gouv.fr/eli/jo/'
     return url + '/'.join(list(map(str, [date.year, date.month, date.day])))
+
 
 def main(argv):
     # Create output folders in case they don't exist
@@ -45,12 +47,12 @@ def main(argv):
     settings.set('LOG_LEVEL', 'INFO')
     # Prevent loading errors from the server:
     settings.set('DOWNLOAD_DELAY', 0.1)
-
+    settings.set('FEED_EXPORT_ENCODING', 'utf-8')
     process = CrawlerProcess(settings)
 
     # Parallelize main spider
     batches = 5
-    daysPerBatch = 2
+    daysPerBatch = 365
     logFileName = './logs/{0}.txt'.format(str(datetime.now()))
 
     for batch in range(batches):
@@ -66,6 +68,7 @@ def main(argv):
         process.crawl(JOPublicationSpider, meta=meta)
 
     process.start()
+
 
 if __name__ == '__main__':
     main(sys.argv)
