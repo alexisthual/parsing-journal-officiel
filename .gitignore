@@ -1,5 +1,6 @@
 scrapping/__pycache__/
 output/*
+output_save/*
 */.DS_Store
 */__pycache__/*
 tests/*
