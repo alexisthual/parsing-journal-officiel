@@ -44,7 +44,7 @@ class TFIDFmanager():
                     if w[1] > 605:
                         f.write(w[0]+"\n")
                         c += 1
-        print("Added {} words to stopwords!".format(c))
+        # print("Added {} words to stopwords!".format(c))
 
     def preprocess_text(self, array):
         """
@@ -75,8 +75,8 @@ class TFIDFmanager():
         for i in range(1, k+1):
             temp = res[i][0]
             results.append(temp)
-            print("->{} ({})".format(temp, dictionary.urls[temp]))
-            print(" ".join(dictionary.content[temp]))
+            # print("->{} ({})".format(temp, dictionary.urls[temp]))
+            # print(" ".join(dictionary.content[temp]))
         if string[0:7]=='article':
             CIDresults = [self.articles.CIDs[article_string] for article_string in results]
             return results, CIDresults
@@ -91,7 +91,7 @@ class TFIDFmanager():
         for fileName in tqdm(os.listdir(rootPath)):
             full_review = True
             folderPath = os.path.join(rootPath, fileName)
-            print("\n\nCurrently going over {} \n".format(folderPath))
+            # print("\n\nCurrently going over {} \n".format(folderPath))
 
             if os.path.isdir(folderPath):
                 m += 1
@@ -127,7 +127,7 @@ class TFIDFmanager():
                         self.articles.CIDs[string] = articleData['cid']
                         o += 1
 
-        print("Visited {} folders, {} summaries, {} article words".format(m, n, o))
+        # print("Visited {} folders, {} summaries, {} article words".format(m, n, o))
 
 
 if __name__ == '__main__':
@@ -141,9 +141,9 @@ if __name__ == '__main__':
     ex = True
     if ex:
         ex_string_1 = 'article_2017-12-05_66'
-        ex_string_2 = 'summary_2017-12-05'
+        # ex_string_2 = 'summary_2017-12-05'
         # close_article_names is under the format 'article_YYYY_MM_DD_numberofarticle'
         close_article_names, close_article_CIDs = tfidf_manager.find_k_closest(ex_string_1, 5)
-        tfidf_manager.find_k_closest(ex_string_2, 5)
+        # tfidf_manager.find_k_closest(ex_string_2, 5)
         print(close_article_CIDs)
-    tfidf_manager.describe_yourself()
+    # tfidf_manager.describe_yourself()
