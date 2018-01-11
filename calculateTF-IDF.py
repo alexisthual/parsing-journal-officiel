@@ -7,7 +7,8 @@ from tfidf.articleDictionary import ArticleDictionary
 
 
 class TFIDFmanager():
-    def __init__(self):
+    def __init__(self, verbose=False):
+        self.verbose = verbose
         self.tfidf_summaries = TfIdf()
         self.tfidf_articles = TfIdf()
         self.summaries = ArticleDictionary()
@@ -44,7 +45,9 @@ class TFIDFmanager():
                     if w[1] > 605:
                         f.write(w[0]+"\n")
                         c += 1
-        # print("Added {} words to stopwords!".format(c))
+
+        if self.verbose:
+            print("Added {} words to stopwords!".format(c))
 
     def preprocess_text(self, array):
         """
@@ -54,7 +57,10 @@ class TFIDFmanager():
         initial_number = len(array)
         array = [word.lower() for word in array if word not in self.stopwords and word.lower() not in self.stopwords and not word.isdigit()]
         final_number = len(array)
-        # print("Preprocessing: reduced number of words from {} to {}".format(initial_number, final_number))
+
+        if self.verbose:
+            print("Preprocessing: reduced number of words from {} to {}".format(initial_number, final_number))
+
         return array
 
     def find_k_closest(self, string, k):
@@ -75,10 +81,14 @@ class TFIDFmanager():
         for i in range(1, k+1):
             temp = res[i][0]
             results.append(temp)
-            # print("->{} ({})".format(temp, dictionary.urls[temp]))
-            # print(" ".join(dictionary.content[temp]))
+
+            if self.verbose:
+                print("->{} ({})".format(temp, dictionary.urls[temp]))
+                print(" ".join(dictionary.content[temp]))
+
         if string[0:7]=='article':
             CIDresults = [self.articles.CIDs[article_string] for article_string in results]
+
             return results, CIDresults
         elif string[0:7] == 'summary':
             return results
@@ -88,10 +98,10 @@ class TFIDFmanager():
         m = 0
         n = 0
         o = 0
+
         for fileName in tqdm(os.listdir(rootPath)):
             full_review = True
             folderPath = os.path.join(rootPath, fileName)
-            # print("\n\nCurrently going over {} \n".format(folderPath))
 
             if os.path.isdir(folderPath):
                 m += 1
@@ -127,7 +137,8 @@ class TFIDFmanager():
                         self.articles.CIDs[string] = articleData['cid']
                         o += 1
 
-        # print("Visited {} folders, {} summaries, {} article words".format(m, n, o))
+        if self.verbose:
+            print("Visited {} folders, {} summaries, {} article words".format(m, n, o))
 
 
 if __name__ == '__main__':
