@@ -76,20 +76,19 @@ class TFIDFmanager():
         res = tfidf.similarities(dictionary.content[string])
         res.sort(key=lambda x: x[1], reverse=True)
         results = []
+        values = []
         print("\n\nTop {} articles returned for {} ({}):".format(k, string, dictionary.urls[string]))
         # closest one is itself so start at 1 and not 0
         for i in range(1, k+1):
             temp = res[i][0]
             results.append(temp)
-
+            values += [res[i][1]]
             if self.verbose:
                 print("->{} ({})".format(temp, dictionary.urls[temp]))
                 print(" ".join(dictionary.content[temp]))
-
         if string[0:7]=='article':
             CIDresults = [self.articles.CIDs[article_string] for article_string in results]
-
-            return results, CIDresults
+            return results, CIDresults, values
         elif string[0:7] == 'summary':
             return results
 
@@ -152,9 +151,11 @@ if __name__ == '__main__':
     ex = True
     if ex:
         ex_string_1 = 'article_2017-12-05_66'
-        # ex_string_2 = 'summary_2017-12-05'
-        # close_article_names is under the format 'article_YYYY_MM_DD_numberofarticle'
-        close_article_names, close_article_CIDs = tfidf_manager.find_k_closest(ex_string_1, 5)
-        # tfidf_manager.find_k_closest(ex_string_2, 5)
+        close_article_names, close_article_CIDs, close_article_scores = tfidf_manager.find_k_closest(ex_string_1, 5)
         print(close_article_CIDs)
+        print(close_article_scores)
+
+        # ex_string_2 = 'summary_2017-12-05'
+        # tfidf_manager.find_k_closest(ex_string_2, 5)
+
     # tfidf_manager.describe_yourself()
