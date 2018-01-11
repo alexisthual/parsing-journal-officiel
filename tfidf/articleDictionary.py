@@ -3,3 +3,4 @@ class ArticleDictionary:
         self.content = {}
         self.urls = {}
         self.NORs = {}
+        self.CIDs = {}

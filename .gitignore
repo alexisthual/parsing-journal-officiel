@@ -10,3 +10,10 @@ logs/*
 venv/*
 *.pyc
 short/*
+*.iml
+*.pyc
+*.pyc
+*.pyc
+*.iml
+.idea/parsing-journal-officiel.iml
+spiders/__pycache__/JOPublicationSpider.cpython-36.pyc

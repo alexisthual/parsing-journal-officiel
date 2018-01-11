@@ -23,12 +23,14 @@ class TFIDFmanager():
         print("Current corpus: {} summaries [{} words] and {} articles [{} words]".format(
             len(self.summaries.content), len(self.tfidf_summaries.corpus_dict.items()),
             len(self.articles.content), len(self.tfidf_articles.corpus_dict.items())))
-        print("\nList of words in summaries' corpus")
+        print("\n\n----------------------------------------------------------------------------")
+        print("List of words in summaries' corpus:")
         print(s)
-        print("\nList of words in articles' corpus")
+        print("\nList of words in articles' corpus:")
         print(a)
-        print("\nList of current stopwords")
+        print("\nList of current stopwords:")
         print(self.stopwords)
+        print("----------------------------------------------------------------------------")
 
     def generate_excluded_vocabulary(self):
         # total_words = sum(self.tfidf_articles.corpus_dict.values())
@@ -69,16 +71,20 @@ class TFIDFmanager():
         res.sort(key=lambda x: x[1], reverse=True)
         results = []
         print("\n\nTop {} articles returned for {} ({}):".format(k, string, dictionary.urls[string]))
-        # closest one is itself
+        # closest one is itself so start at 1 and not 0
         for i in range(1, k+1):
             temp = res[i][0]
-            results += temp
+            results.append(temp)
             print("->{} ({})".format(temp, dictionary.urls[temp]))
             print(" ".join(dictionary.content[temp]))
-        return results
+        if string[0:7]=='article':
+            CIDresults = [self.articles.CIDs[article_string] for article_string in results]
+            return results, CIDresults
+        elif string[0:7] == 'summary':
+            return results
 
     def go_through_data(self):
-        rootPath = os.path.join(os.getcwd(), 'short/output/')  # folder that we will go through
+        rootPath = os.path.join(os.getcwd(), 'output/')  # folder that we will go through
         m = 0
         n = 0
         o = 0
@@ -118,6 +124,7 @@ class TFIDFmanager():
                         self.articles.content[string] = words
                         self.articles.urls[string] = articleData['url']
                         self.articles.NORs[string] = articleData['NOR']
+                        self.articles.CIDs[string] = articleData['cid']
                         o += 1
 
         print("Visited {} folders, {} summaries, {} article words".format(m, n, o))
@@ -131,11 +138,12 @@ if __name__ == '__main__':
     # tfidf_manager.generate_excluded_vocabulary()
 
     # examples of retrieving k closest for article and summary
-    ex = False
+    ex = True
     if ex:
         ex_string_1 = 'article_2017-12-05_66'
         ex_string_2 = 'summary_2017-12-05'
-        tfidf_manager.find_k_closest(ex_string_1, 5)
+        # close_article_names is under the format 'article_YYYY_MM_DD_numberofarticle'
+        close_article_names, close_article_CIDs = tfidf_manager.find_k_closest(ex_string_1, 5)
         tfidf_manager.find_k_closest(ex_string_2, 5)
-
+        print(close_article_CIDs)
     tfidf_manager.describe_yourself()
