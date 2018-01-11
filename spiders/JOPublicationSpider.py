@@ -274,9 +274,6 @@ class JOPublicationSpider(scrapy.Spider):
         dataDiv = response.css('.data')
         mainDiv = None
 
-        nor_search_string = 'NOR\:\s*([A-Z0-9]*)'
-        eli_search_string = 'ELI\:\s(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
-
         for div in dataDiv.xpath('./div'):
             hasEntete = len(div.xpath('./div[contains(@class, \'enteteTexte\')]')) == 1
             if hasEntete:
