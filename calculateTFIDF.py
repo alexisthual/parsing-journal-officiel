@@ -7,11 +7,15 @@ from tfidf.articleDictionary import ArticleDictionary
 
 
 class TFIDFmanager():
-    def __init__(self):
+    def __init__(self, verbose=False):
+        self.verbose = verbose
+
         self.tfidf_summaries = TfIdf()
         self.tfidf_articles = TfIdf()
+
         self.summaries = ArticleDictionary()
         self.articles = ArticleDictionary()
+
         self.excluded_vocabulary = []
         f = io.open('tfidf/stopwords.txt', 'r', encoding='utf8')
         self.stopwords = f.read().splitlines()
@@ -23,12 +27,14 @@ class TFIDFmanager():
         print("Current corpus: {} summaries [{} words] and {} articles [{} words]".format(
             len(self.summaries.content), len(self.tfidf_summaries.corpus_dict.items()),
             len(self.articles.content), len(self.tfidf_articles.corpus_dict.items())))
-        print("\nList of words in summaries' corpus")
+        print("\n\n----------------------------------------------------------------------------")
+        print("List of words in summaries' corpus:")
         print(s)
-        print("\nList of words in articles' corpus")
+        print("\nList of words in articles' corpus:")
         print(a)
-        print("\nList of current stopwords")
+        print("\nList of current stopwords:")
         print(self.stopwords)
+        print("----------------------------------------------------------------------------")
 
     def generate_excluded_vocabulary(self):
         # total_words = sum(self.tfidf_articles.corpus_dict.values())
@@ -42,7 +48,9 @@ class TFIDFmanager():
                     if w[1] > 605:
                         f.write(w[0]+"\n")
                         c += 1
-        print("Added {} words to stopwords!".format(c))
+
+        if self.verbose:
+            print("Added {} words to stopwords!".format(c))
 
     def preprocess_text(self, array):
         """
@@ -52,7 +60,10 @@ class TFIDFmanager():
         initial_number = len(array)
         array = [word.lower() for word in array if word not in self.stopwords and word.lower() not in self.stopwords and not word.isdigit()]
         final_number = len(array)
-        # print("Preprocessing: reduced number of words from {} to {}".format(initial_number, final_number))
+
+        if self.verbose:
+            print("Preprocessing: reduced number of words from {} to {}".format(initial_number, final_number))
+
         return array
 
     def find_k_closest(self, string, k):
@@ -68,24 +79,36 @@ class TFIDFmanager():
         res = tfidf.similarities(dictionary.content[string])
         res.sort(key=lambda x: x[1], reverse=True)
         results = []
-        print("\n\nTop {} articles returned for {} ({}):".format(k, string, dictionary.urls[string]))
-        # closest one is itself
+        values = []
+
+        if self.verbose:
+            print("\n\nTop {} articles returned for {} ({}):".format(k, string, dictionary.urls[string]))
+
+        # closest one is itself so start at 1 and not 0
         for i in range(1, k+1):
             temp = res[i][0]
-            results += temp
-            print("->{} ({})".format(temp, dictionary.urls[temp]))
-            print(" ".join(dictionary.content[temp]))
-        return results
+            results.append(temp)
+            values += [res[i][1]]
+            if self.verbose:
+                print("->{} ({})".format(temp, dictionary.urls[temp]))
+                print(" ".join(dictionary.content[temp]))
 
-    def go_through_data(self):
-        rootPath = os.path.join(os.getcwd(), 'short/output/')  # folder that we will go through
+        if string[0:7]=='article':
+            CIDresults = [self.articles.CIDs[article_string] for article_string in results]
+
+            return results, CIDresults, values
+        elif string[0:7] == 'summary':
+            return results
+
+    def go_through_data(self, rootDir):
+        rootPath = os.path.join(os.getcwd(), rootDir)  # folder that we will go through
         m = 0
         n = 0
         o = 0
+
         for fileName in tqdm(os.listdir(rootPath)):
             full_review = True
             folderPath = os.path.join(rootPath, fileName)
-            print("\n\nCurrently going over {} \n".format(folderPath))
 
             if os.path.isdir(folderPath):
                 m += 1
@@ -93,7 +116,7 @@ class TFIDFmanager():
 
                 # summaries
                 with open(os.path.join(folderPath, 'summary.json')) as summaryJsonData:
-                    string = 'summary_'+folderPath[-10:]
+                    string = 'summary_' + folderPath[-10:]
                     # 'summary_2017-12-02' for ex
                     words = []
                     summaryData = json.load(summaryJsonData)
@@ -118,24 +141,30 @@ class TFIDFmanager():
                         self.articles.content[string] = words
                         self.articles.urls[string] = articleData['url']
                         self.articles.NORs[string] = articleData['NOR']
+                        self.articles.CIDs[string] = articleData['cid']
                         o += 1
 
-        print("Visited {} folders, {} summaries, {} article words".format(m, n, o))
+        if self.verbose:
+            print("Visited {} folders, {} summaries, {} article words".format(m, n, o))
 
 
 if __name__ == '__main__':
+    rootDir = './output/'
     tfidf_manager = TFIDFmanager()
-    tfidf_manager.go_through_data()
+    tfidf_manager.go_through_data(rootDir)
 
     # this is to add words to the stopwords list
     # tfidf_manager.generate_excluded_vocabulary()
 
     # examples of retrieving k closest for article and summary
-    ex = False
+    ex = True
     if ex:
         ex_string_1 = 'article_2017-12-05_66'
-        ex_string_2 = 'summary_2017-12-05'
-        tfidf_manager.find_k_closest(ex_string_1, 5)
-        tfidf_manager.find_k_closest(ex_string_2, 5)
+        close_article_names, close_article_CIDs, close_article_scores = tfidf_manager.find_k_closest(ex_string_1, 5)
+        # print(close_article_CIDs)
+        # print(close_article_scores)
 
-    tfidf_manager.describe_yourself()
+        # ex_string_2 = 'summary_2017-12-05'
+        # tfidf_manager.find_k_closest(ex_string_2, 5)
+
+    # tfidf_manager.describe_yourself()

@@ -1,5 +1,6 @@
 scrapping/__pycache__/
 output/*
+output_save/*
 */.DS_Store
 */__pycache__/*
 tests/*
@@ -9,3 +10,10 @@ logs/*
 venv/*
 *.pyc
 short/*
+*.iml
+*.pyc
+*.pyc
+*.pyc
+*.iml
+.idea/parsing-journal-officiel.iml
+spiders/__pycache__/JOPublicationSpider.cpython-36.pyc
