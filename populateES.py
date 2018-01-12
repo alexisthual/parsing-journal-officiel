@@ -3,6 +3,8 @@ import os
 from tqdm import tqdm
 from elasticsearch import Elasticsearch
 
+from calculateTFIDF import TFIDFmanager
+
 
 class dbManager:
     def __init__(self, overwriteIndices=False, maxSummaries=10):
@@ -20,18 +22,18 @@ class dbManager:
         self.es.indices.create(index='summary', ignore=400)
         self.es.indices.create(index='article', ignore=400)
 
-    def populateDB(self):
-        rootPath = os.path.join(os.getcwd(), 'output/')
+    def populateDB(self, rootDir, tfidfManager, k=5):
+        rootPath = os.path.join(os.getcwd(), rootDir)
 
         # Iterate through every JO publication
         n = 0
         totalFolders = len(os.listdir(rootPath))
         with tqdm(total = self.maxSummaries if self.maxSummaries else totalFolders) as pbar:
-            for fileName in os.listdir(rootPath):
-                folderPath = os.path.join(rootPath, fileName)
+            for folderName in os.listdir(rootPath):
+                folderPath = os.path.join(rootPath, folderName)
 
                 if os.path.isdir(folderPath):
-                    date = fileName.split('-')
+                    date = folderName.split('-')
 
                     # Populate DB with summary file
                     with open(os.path.join(folderPath, 'summary.json')) as summaryJsonData:
@@ -42,9 +44,19 @@ class dbManager:
 
                     # Iterate through every article of the current publication
                     for articleFileName in tqdm(os.listdir(articlesPath)):
+                        # Given an article, computes the k closest articles
+                        # and adds this information to the already existing JSON file
+                        # 'article_2017-12-05_66'
+                        articleString = 'article_{}_{}'.format(folderName, articleFileName.split('.')[0])
+                        k_names, k_cids, k_scores = tfidfManager.find_k_closest(articleString, k)
+
                         # Populate DB with article file
                         with open(os.path.join(articlesPath, articleFileName)) as articleJsonData:
                             articleData = json.load(articleJsonData)
+                            articleData['neighbors'] = [{
+                                'cid': k_cids[i],
+                                'score': k_scores[i]
+                            } for i in range(len(k_cids))]
                             self.es.index(index='article', doc_type='nodes', body=articleData)
 
                 n += 1
@@ -56,6 +68,13 @@ class dbManager:
 
 
 if __name__ == '__main__':
+    rootDir = 'output/'
+
+    print('Initiate TFIDF:')
+    tfidfManager = TFIDFmanager()
+    tfidfManager.go_through_data(rootDir)
+
+    print('Populate Elastic instance:')
     dbm = dbManager(overwriteIndices=True, maxSummaries=5)
     dbm.initESIndexes()
-    dbm.populateDB()
+    dbm.populateDB(rootDir, tfidfManager, k=5)

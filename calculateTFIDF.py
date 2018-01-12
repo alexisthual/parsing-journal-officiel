@@ -9,10 +9,13 @@ from tfidf.articleDictionary import ArticleDictionary
 class TFIDFmanager():
     def __init__(self, verbose=False):
         self.verbose = verbose
+
         self.tfidf_summaries = TfIdf()
         self.tfidf_articles = TfIdf()
+
         self.summaries = ArticleDictionary()
         self.articles = ArticleDictionary()
+
         self.excluded_vocabulary = []
         f = io.open('tfidf/stopwords.txt', 'r', encoding='utf8')
         self.stopwords = f.read().splitlines()
@@ -77,7 +80,10 @@ class TFIDFmanager():
         res.sort(key=lambda x: x[1], reverse=True)
         results = []
         values = []
-        print("\n\nTop {} articles returned for {} ({}):".format(k, string, dictionary.urls[string]))
+
+        if self.verbose:
+            print("\n\nTop {} articles returned for {} ({}):".format(k, string, dictionary.urls[string]))
+
         # closest one is itself so start at 1 and not 0
         for i in range(1, k+1):
             temp = res[i][0]
@@ -86,14 +92,16 @@ class TFIDFmanager():
             if self.verbose:
                 print("->{} ({})".format(temp, dictionary.urls[temp]))
                 print(" ".join(dictionary.content[temp]))
+
         if string[0:7]=='article':
             CIDresults = [self.articles.CIDs[article_string] for article_string in results]
+
             return results, CIDresults, values
         elif string[0:7] == 'summary':
             return results
 
-    def go_through_data(self):
-        rootPath = os.path.join(os.getcwd(), 'output/')  # folder that we will go through
+    def go_through_data(self, rootDir):
+        rootPath = os.path.join(os.getcwd(), rootDir)  # folder that we will go through
         m = 0
         n = 0
         o = 0
@@ -108,7 +116,7 @@ class TFIDFmanager():
 
                 # summaries
                 with open(os.path.join(folderPath, 'summary.json')) as summaryJsonData:
-                    string = 'summary_'+folderPath[-10:]
+                    string = 'summary_' + folderPath[-10:]
                     # 'summary_2017-12-02' for ex
                     words = []
                     summaryData = json.load(summaryJsonData)
@@ -141,8 +149,9 @@ class TFIDFmanager():
 
 
 if __name__ == '__main__':
+    rootDir = './output/'
     tfidf_manager = TFIDFmanager()
-    tfidf_manager.go_through_data()
+    tfidf_manager.go_through_data(rootDir)
 
     # this is to add words to the stopwords list
     # tfidf_manager.generate_excluded_vocabulary()
@@ -152,8 +161,8 @@ if __name__ == '__main__':
     if ex:
         ex_string_1 = 'article_2017-12-05_66'
         close_article_names, close_article_CIDs, close_article_scores = tfidf_manager.find_k_closest(ex_string_1, 5)
-        print(close_article_CIDs)
-        print(close_article_scores)
+        # print(close_article_CIDs)
+        # print(close_article_scores)
 
         # ex_string_2 = 'summary_2017-12-05'
         # tfidf_manager.find_k_closest(ex_string_2, 5)
