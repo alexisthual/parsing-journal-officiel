@@ -13,3 +13,6 @@ Our article parser mainly does three things:
 * it extracts all links contained in the article
 * it parses all tables contained in the article (and converts them to JSON)
 * it parses the text and removes all HTML tags
+
+# Presentation (Google Slides)
+> http://bit.ly/ParsingJO
