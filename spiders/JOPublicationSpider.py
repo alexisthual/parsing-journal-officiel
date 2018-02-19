@@ -174,7 +174,7 @@ class JOPublicationSpider(scrapy.Spider):
             os.makedirs(path)
 
         with open(os.path.join(path, filename), 'w+') as outfile:
-            json.dump(data, outfile)
+            json.dump(data, outfile, ensure_ascii=False)
 
         for followLink in data['array']:
             yield scrapy.Request(
@@ -353,4 +353,4 @@ class JOPublicationSpider(scrapy.Spider):
                 os.makedirs(path)
 
             with open(os.path.join(path, filename), 'w+') as outfile:
-                json.dump(data, outfile)
+                json.dump(data, outfile, ensure_ascii=False)
