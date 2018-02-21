@@ -22,6 +22,33 @@ class dbManager:
         self.es.indices.create(index='summary', ignore=400)
         self.es.indices.create(index='article', ignore=400)
 
+        self.es.indices.put_mapping(index='summary',
+            doc_type='nodes',
+            body={
+                "properties": {
+                    "date": {
+                        "type": "date",
+                        "format": "yyyy-MM-dd"
+                    }
+                }
+            }
+        )
+
+        self.es.indices.put_mapping(index='article',
+            doc_type='nodes',
+            body={
+                "properties": {
+                    "date": {
+                        "type": "date",
+                        "format": "yyyy-MM-dd"
+                    },
+                    "cid": {
+                        "type": "keyword"
+                    }
+                }
+            }
+        )
+
     def populateDB(self, rootDir, tfidfManager, k=5):
         rootPath = os.path.join(os.getcwd(), rootDir)
 

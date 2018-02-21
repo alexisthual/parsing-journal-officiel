@@ -27,7 +27,7 @@ class textParser:
             parsedText = re.sub('[\n]+', ' ', parsedText)
 
         parsedText = re.sub('[\t]', '', parsedText)
-        parsedText = re.sub('(\s*[\n]+\s*)+', '\n', parsedText)
+        parsedText = re.sub('\s*\n\s*', '\n', parsedText)
         parsedText = re.sub(' +', ' ', parsedText)
         parsedText = parsedText.strip()
 

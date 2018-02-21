@@ -152,11 +152,14 @@ class JOPublicationSpider(scrapy.Spider):
             for i, ul in enumerate(mainTag.xpath('./ul')):
                 self.recursiveUL([h3Titles[i]], ul)
 
+        date = '-'.join(response.url.split('/')[-3:])
+
         # Final data
         data = {
             'title': mainTitle,
             'url': response.url,
             'array': self.array,
+            'date': date,
         }
 
         # Testing that the retreived data is somewhat consistent with
@@ -253,6 +256,10 @@ class JOPublicationSpider(scrapy.Spider):
         articleSoup = BeautifulSoup(articleDiv.extract_first(), 'html.parser')
         # Parse all tables inside the main div
         articleSoup, parsedTables = self.parseTables(articleSoup)
+        for p in articleSoup.find_all('p'):
+            p.append('<br/>')
+        for br in articleSoup.find_all('br'):
+            br.replace_with('\n')
         self.article = articleSoup.get_text()
         self.parsedTables = parsedTables
         # Collect links inside entete
@@ -335,6 +342,8 @@ class JOPublicationSpider(scrapy.Spider):
                     )
                 )
 
+            date = '-'.join(parentUrl.split('/')[-3:])
+
             data = {
                 'url': response.url,
                 'entete': self.entete,
@@ -344,6 +353,8 @@ class JOPublicationSpider(scrapy.Spider):
                 'article': self.article,
                 'links': self.links,
                 'tables': self.parsedTables,
+                'date': date,
+                'summaryUrl': parentUrl,
             }
 
             path = 'output/{0}/articles/'.format(str(self.urls[parentUrl]))
