@@ -52,7 +52,7 @@ def main(argv):
 
     # Parallelize main spider
     batches = 3
-    daysPerBatch = 3
+    daysPerBatch = 5
     logFileName = './logs/{0}.txt'.format(str(datetime.now()))
 
     for batch in range(batches):
@@ -68,7 +68,6 @@ def main(argv):
         process.crawl(JOPublicationSpider, meta=meta)
 
     process.start()
-
 
 if __name__ == '__main__':
     main(sys.argv)

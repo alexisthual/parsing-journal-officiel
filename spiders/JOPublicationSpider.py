@@ -182,7 +182,7 @@ class JOPublicationSpider(scrapy.Spider):
         for followLink in data['array']:
             yield scrapy.Request(
                 'https://www.legifrance.gouv.fr' + followLink['href'],
-                callback=partial(self.parseArticle, response.url, followLink['i'])
+                callback=partial(self.parseArticle, followLink['text'], response.url, followLink['i'])
             )
 
 
@@ -191,31 +191,38 @@ class JOPublicationSpider(scrapy.Spider):
     # Inside an article, find the relevant pieces of text
     # and parse them correctly.
 
-
-    def enrichLinks(self, div):
+    def enrichLinks(self, soup):
         """
-        Input: Scrapy <div> tag.
+        Input: SBeatifulSoup soup
         Output: dict with information concerning the input tag.
         """
 
-        links = div.xpath('.//a')
+        k = 0
+        for a in soup.findAll('a'):
+            href = a.get('href')
+            text = a.get_text()
 
-        for a in links:
-            text = a.xpath('./text()').extract_first()
-            href = a.xpath('./@href').extract_first()
+            if (href and text != ' '):
+                hashValue = str(hash(str(k) + text))
 
-            cid = []
-            if href:
-                cid = re.search('cidTexte\=(.*?)(?=\&)', href)
-                cid = cid.groups() if cid else []
+                a.replaceWith('parsedLink#{}'.format(hashValue))
 
-            if (('En savoir plus sur cet article' not in text)
-                and len(cid) > 0):
-                self.links.append({
-                    'text': text,
-                    'href': href,
-                    'cid': cid[0],
-                })
+                cid = []
+                if href:
+                    cid = re.search('cidTexte\=(.*?)(?=\&)', href)
+                    cid = cid.groups() if cid else []
+
+                if (('En savoir plus sur cet article' not in text)
+                    and len(cid) > 0):
+                    self.links.append({
+                        'text': text,
+                        'href': href,
+                        'cid': cid[0],
+                        'hash': hashValue,
+                    })
+                k += 1
+
+        return soup
 
     def parseTables(self, soup):
         """
@@ -230,7 +237,7 @@ class JOPublicationSpider(scrapy.Spider):
         for table in soup.findAll('table'):
             parsedTable = self.tableParser.toJson(table)
             parsedTables.append(parsedTable)
-            table.replaceWith('parsedTable#' + str(parsedTable['hash']))
+            table.replaceWith('parsedTable#{}'.format(str(parsedTable['hash'])))
 
         return soup, parsedTables
 
@@ -244,9 +251,10 @@ class JOPublicationSpider(scrapy.Spider):
         # Collect Entete
         enteteDiv = div.xpath('./div[contains(@class, \'enteteTexte\')]')
         enteteSoup = BeautifulSoup(enteteDiv.extract_first(), 'html.parser')
+        enteteSoup = self.enrichLinks(enteteSoup)
         self.entete = enteteSoup.get_text()
         # Collect links inside entete
-        self.enrichLinks(enteteDiv)
+        # self.enrichLinks(enteteDiv)
 
         if self.verbose:
             print(self.entete)
@@ -254,21 +262,23 @@ class JOPublicationSpider(scrapy.Spider):
         # Collect remaining text
         articleDiv = div.xpath('./div[2]')
         articleSoup = BeautifulSoup(articleDiv.extract_first(), 'html.parser')
+        articleSoup = self.enrichLinks(articleSoup)
         # Parse all tables inside the main div
         articleSoup, parsedTables = self.parseTables(articleSoup)
-        for p in articleSoup.find_all('p'):
+        for p in articleSoup.findAll('p'):
             p.append('<br/>')
         for br in articleSoup.find_all('br'):
             br.replace_with('\n')
         self.article = articleSoup.get_text()
+        # self.article = self.article.replace('<br/>', '\n')
         self.parsedTables = parsedTables
         # Collect links inside entete
-        self.enrichLinks(articleDiv)
+        # self.enrichLinks(articleDiv)
 
         if self.verbose:
             print(self.article)
 
-    def parseArticle(self, parentUrl, textNumber, response):
+    def parseArticle(self, summaryText, parentUrl, textNumber, response):
         """
         Input: article index in publication summary, Scrapy response.
         Output: writes parsed version of the article to a specific JSON file.
@@ -355,6 +365,7 @@ class JOPublicationSpider(scrapy.Spider):
                 'tables': self.parsedTables,
                 'date': date,
                 'summaryUrl': parentUrl,
+                'summaryText': summaryText,
             }
 
             path = 'output/{0}/articles/'.format(str(self.urls[parentUrl]))

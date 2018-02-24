@@ -4,7 +4,7 @@ from elasticsearch import Elasticsearch
 
 
 class dbCompleter:
-    def __init__(self, maxArticles=1000):
+    def __init__(self, maxArticles=3000):
         self.es = Elasticsearch()
         self.maxArticles = maxArticles
 

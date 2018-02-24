@@ -102,6 +102,6 @@ if __name__ == '__main__':
     tfidfManager.go_through_data(rootDir)
 
     print('Populate Elastic instance:')
-    dbm = dbManager(overwriteIndices=True, maxSummaries=5)
+    dbm = dbManager(overwriteIndices=True, maxSummaries=None)
     dbm.initESIndexes()
     dbm.populateDB(rootDir, tfidfManager, k=5)
