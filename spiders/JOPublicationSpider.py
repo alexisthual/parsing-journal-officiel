@@ -205,21 +205,19 @@ class JOPublicationSpider(scrapy.Spider):
             if (href and text != ' '):
                 hashValue = str(hash(str(k) + text))
 
-                a.replaceWith('parsedLink#{}'.format(hashValue))
-
                 cid = []
                 if href:
                     cid = re.search('cidTexte\=(.*?)(?=\&)', href)
                     cid = cid.groups() if cid else []
 
-                if (('En savoir plus sur cet article' not in text)
-                    and len(cid) > 0):
-                    self.links.append({
-                        'text': text,
-                        'href': href,
-                        'cid': cid[0],
-                        'hash': hashValue,
-                    })
+                a.replaceWith('parsedLink#{}'.format(hashValue))
+
+                self.links.append({
+                    'text': text,
+                    'href': href,
+                    'cid': cid[0] if len(cid) > 0 else None,
+                    'hash': hashValue,
+                })
                 k += 1
 
         return soup
