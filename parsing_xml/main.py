@@ -1,26 +1,40 @@
+import glob
 import os
+import re
+from tqdm import tqdm
 
 from parsers.JORFContextParser import SummaryParser
 from parsers.JORFTextParser import ArticleParser
 from databaseManager import DatabaseManager
 
-if __name__ == '__main__':
-    currentPath = os.getcwd()
-    pathToFile = 'data/JORFSIMPLE/20170319-002045/jorf/simple/JORF/CONT/00/00/34/20/94/JORFCONT000034209405'
+# %% Test cell
 
-    dbm = DatabaseManager(overwriteIndices=True)
+# %% Main cell
+if __name__ == '__main__':
+    # Generate regex for catching all XML files
+    currentDir = os.getcwd()
+    dataDir = 'data/JORFSIMPLE'
+    filePathRegex = '*/jorf/simple/JORF/CONT/**/*.xml'
+    fileAbsPath = os.path.join(currentDir, dataDir, filePathRegex)
+
+    # Regex to use in order to extract the file's name
+    # from a given path
+    fileNameRegex = re.compile('.*\/([a-zA-Z0-9]+\.xml)')
+
+    # Initiabe db
+    dbm = DatabaseManager(overwriteIndices=True, verbose=True)
     dbm.initESIndexes()
 
-    summaryFileName = 'JORFCONT000034209405.xml'
-    summaryAbsPath = os.path.join(currentPath, pathToFile, summaryFileName)
+    # Initiate parsers
     summaryParser = SummaryParser()
-    parsedSummary = summaryParser.parse(summaryAbsPath)
-    dbm.addSummary(parsedSummary)
-    print('added summary')
-
-    articleFileName = 'JORFTEXT000034209410.xml'
-    articleAbsPath = os.path.join(currentPath, pathToFile, articleFileName)
     articleParser = ArticleParser()
-    parsedArticle = articleParser.parse(articleAbsPath)
-    dbm.addArticle(parsedArticle)
-    print('added article')
+
+    for filePath in tqdm(glob.glob(fileAbsPath, recursive=True)):
+        fileName = fileNameRegex.search(filePath).group(1)
+
+        if re.match('.*CONT.*', fileName) != None:
+            parsedSummary = summaryParser.parse(filePath)
+            dbm.addSummary(parsedSummary)
+        elif re.match('.*TEXT.*', fileName) != None:
+            parsedArticle = articleParser.parse(filePath)
+            dbm.addArticle(parsedArticle)

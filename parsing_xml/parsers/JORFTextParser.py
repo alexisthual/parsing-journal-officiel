@@ -21,6 +21,7 @@ class ArticleParser:
     def initiate(self):
         self.information = {}
         self.articles = []
+        self.signataires = None
 
     def parse(self, absPath):
         '''Takes the absolute path to the file to be parsed
@@ -35,21 +36,32 @@ class ArticleParser:
 
             if tag in self.getTextTags:
                 self.information[tag] = element.text
+                if tag == 'ORIGINE_PUBLI':
+                    self.information['ORIGINE_PUBLI_ID'] = element.get('id')
             elif tag == 'STRUCT':
                 self.parseStructure(element)
 
-        self.information['STRUCT'] = self.articles
+        self.information['STRUCT'] = {
+            'articles': self.articles,
+            'signataires': self.signataires
+        }
+
         return json.dumps(self.information)
 
     def parseStructure(self, parentElement):
         '''Util function to parse a given STRUCT tag.'''
 
-        for article in parentElement:
-            information = {}
-            for element in article:
-                tag = element.tag
-                if tag in self.getTextArticleTags:
-                    information[tag] = element.text
-                elif tag in self.getContenuArticleTags:
-                    information[tag] = ET.tostring(element.find('CONTENU'), encoding='utf-8').decode('utf-8')
-            self.articles.append(information)
+        for structElement in parentElement:
+            tag = structElement.tag
+
+            if tag == 'ARTICLE':
+                information = {}
+                for element in structElement:
+                    tag = element.tag
+                    if tag in self.getTextArticleTags:
+                        information[tag] = element.text
+                    elif tag in self.getContenuArticleTags:
+                        information[tag] = ET.tostring(element.find('CONTENU'), encoding='utf-8').decode('utf-8')
+                self.articles.append(information)
+            elif tag == 'SIGNATAIRES':
+                self.signataires = ET.tostring(structElement.find('CONTENU'), encoding='utf-8').decode('utf-8')
