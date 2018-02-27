@@ -1,6 +1,7 @@
 import os
 
-from xmlParser import SummaryParser, ArticleParser
+from parsers.JORFContextParser import SummaryParser
+from parsers.JORFTextParser import ArticleParser
 from databaseManager import DatabaseManager
 
 if __name__ == '__main__':
