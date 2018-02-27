@@ -1,5 +1,6 @@
 import json
 import os
+import time
 from tqdm import tqdm
 from elasticsearch import Elasticsearch
 
@@ -32,9 +33,8 @@ class DatabaseManager:
         if self.verbose:
             print('Creating indices...')
 
+        # Initate summary ES index
         self.es.indices.create(index='summary', ignore=400)
-        self.es.indices.create(index='article', ignore=400)
-
         self.es.indices.put_mapping(index='summary',
             doc_type='nodes',
             body={
@@ -53,8 +53,26 @@ class DatabaseManager:
             }
         )
 
-        self.es.indices.put_mapping(index='article',
-            doc_type='nodes',
+        # Initiate article ES index
+        self.es.indices.create(index='article', ignore=400)
+        self.es.indices.close(index='article')
+        self.es.indices.put_settings(index='article',
+            body={
+                "analysis": {
+                    "analyzer": {
+                        "htmlStripAnalyzer": {
+                            "type": "custom",
+                            "tokenizer": "standard",
+                            "filter": ["standard", "lowercase"],
+                            "char_filter": [
+                                "html_strip"
+                            ]
+                        }
+                    }
+                }
+            }
+        )
+        self.es.indices.put_mapping(index='article', doc_type='nodes',
             body={
                 "properties": {
                     "DATE_PUBLI": {
@@ -68,7 +86,13 @@ class DatabaseManager:
                         "type": "object",
                         "properties": {
                             "articles": {
-                                "type": "nested"
+                                "type": "nested",
+                                "properties": {
+                                    "BLOC_TEXTUEL": {
+                                        "type": "text",
+                                        "analyzer": "htmlStripAnalyzer"
+                                    }
+                                }
                             },
                             "signataires": {
                                 "type": "text"
@@ -78,6 +102,7 @@ class DatabaseManager:
                 }
             }
         )
+        self.es.indices.open(index='article')
 
     def addSummary(self, nodeData):
         self.es.index(index='summary', doc_type='nodes', body=nodeData)

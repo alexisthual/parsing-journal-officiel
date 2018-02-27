@@ -61,7 +61,11 @@ class ArticleParser:
                     if tag in self.getTextArticleTags:
                         information[tag] = element.text
                     elif tag in self.getContenuArticleTags:
-                        information[tag] = ET.tostring(element.find('CONTENU'), encoding='utf-8').decode('utf-8')
+                        # information[tag] = ''.join(element.find('CONTENU').itertext()) if element.find('CONTENU') else None
+                        information[tag] =\
+                            ET.tostring(element.find('CONTENU'), encoding='utf-8').decode('utf-8')
                 self.articles.append(information)
             elif tag == 'SIGNATAIRES':
-                self.signataires = ET.tostring(structElement.find('CONTENU'), encoding='utf-8').decode('utf-8')
+                # self.signataires = structElement.find('CONTENU').text if structElement.find('CONTENU') else None
+                self.signataires =\
+                    ET.tostring(structElement.find('CONTENU'), encoding='utf-8').decode('utf-8')
