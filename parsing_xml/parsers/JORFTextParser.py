@@ -14,6 +14,7 @@ class ArticleParser:
             'ID', 'ID_ELI', 'ORIGINE', 'NATURE', 'NOR',
             'DATE_PUBLI', 'DATE_TEXTE', 'ORIGINE_PUBLI',
             'TITRE', 'TITREFULL', 'AUTORITE', 'MINISTERE']
+        self.getContenuTags = ['NOTICE', 'VISAS', 'ABRO', 'RECT', 'SM', 'TP']
         self.getTextArticleTags = ['ID', 'ID_ELI']
         self.getContenuArticleTags = ['SM', 'BLOC_TEXTUEL']
         self.initiate()
@@ -38,6 +39,8 @@ class ArticleParser:
                 self.information[tag] = element.text
                 if tag == 'ORIGINE_PUBLI':
                     self.information['ORIGINE_PUBLI_ID'] = element.get('id')
+            elif tag in self.getContenuTags:
+                self.information[tag] = self.getContenu(element)
             elif tag == 'STRUCT':
                 self.parseStructure(element)
 
@@ -47,6 +50,12 @@ class ArticleParser:
         }
 
         return json.dumps(self.information)
+
+    def getContenu(self, element):
+        '''Util function for getting the inner text of a xml tag
+        which supposedly contains a CONTENU tag which we are interested in.'''
+
+        return ET.tostring(element.find('CONTENU'), encoding='utf-8').decode('utf-8')
 
     def parseStructure(self, parentElement):
         '''Util function to parse a given STRUCT tag.'''
@@ -61,11 +70,7 @@ class ArticleParser:
                     if tag in self.getTextArticleTags:
                         information[tag] = element.text
                     elif tag in self.getContenuArticleTags:
-                        # information[tag] = ''.join(element.find('CONTENU').itertext()) if element.find('CONTENU') else None
-                        information[tag] =\
-                            ET.tostring(element.find('CONTENU'), encoding='utf-8').decode('utf-8')
+                        information[tag] = self.getContenu(element)
                 self.articles.append(information)
             elif tag == 'SIGNATAIRES':
-                # self.signataires = structElement.find('CONTENU').text if structElement.find('CONTENU') else None
-                self.signataires =\
-                    ET.tostring(structElement.find('CONTENU'), encoding='utf-8').decode('utf-8')
+                self.signataires = self.getContenu(structElement)

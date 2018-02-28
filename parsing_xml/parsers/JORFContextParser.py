@@ -63,9 +63,7 @@ class SummaryParser:
             elif tag == 'LIEN_TXT':
                 Node('', parent=currentNode, idtxt=element.get('idtxt'), titre=element.get('titretxt'))
 
-        assert(len(rootNode.children) == 1)
-        self.structTree = rootNode.children[0]
-        self.structTree.parent = None
+        self.structTree = rootNode
         self.parsedTree = self.recursiveParseNode(self.structTree)
 
     def recursiveParseNode(self, node):
