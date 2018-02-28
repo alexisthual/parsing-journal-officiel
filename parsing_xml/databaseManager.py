@@ -47,6 +47,7 @@ class DatabaseManager:
                         "type": "keyword"
                     },
                     "STRUCTURE_TXT": {
+                        "type": "object",
                         "enabled": False
                     }
                 }
