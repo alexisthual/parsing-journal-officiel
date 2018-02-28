@@ -12,7 +12,7 @@ from databaseManager import DatabaseManager
 
 # %% Main cell
 def recursiveSearch(dirAbsPath):
-    '''Util function iterating through the directories of given directory.
+    '''Util function iterating through the directories of a given directory.
     It returns False in case there are several possible directories.'''
 
     directories = [os.path.join(dirAbsPath, d) for d in os.listdir(dirAbsPath) if os.path.isdir(os.path.join(dirAbsPath, d))]
@@ -30,6 +30,10 @@ def shouldExploreDir(dirAbsPath):
     return recursiveSearch(dirAbsPath)
 
 if __name__ == '__main__':
+    '''Explores folders in a given directory. Parses them and adds them
+    to the locally running ElasticSearch instance, assuming each folder
+    is a seperate publication of the JORF.'''
+
     # Generate regex for catching all XML files
     currentDir = os.getcwd()
     dataDir = 'data/JORFSIMPLE'
@@ -48,8 +52,8 @@ if __name__ == '__main__':
     summaryParser = SummaryParser()
     articleParser = ArticleParser()
 
-    # for filePath in tqdm(glob.glob(fileAbsPath, recursive=True)):
     dataDirPath = os.path.join(currentDir, dataDir)
+
     for dirName in tqdm(os.listdir(dataDirPath)):
         dirAbsPath = os.path.join(dataDirPath, dirName, 'jorf/simple/JORF')
 
