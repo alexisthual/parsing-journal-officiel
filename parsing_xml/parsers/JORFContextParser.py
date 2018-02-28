@@ -49,7 +49,7 @@ class SummaryParser:
             if tag == 'TM':
                 level = int(element.attrib['niv'])
                 if level != currentLevel + 1:
-                    for _ in range(abs(level - currentLevel + 1)):
+                    for _ in range(abs(level - currentLevel) + 1):
                         self.currentConceptPath.pop()
                 currentLevel = level
             elif tag == 'TITRE_TM':
