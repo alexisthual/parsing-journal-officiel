@@ -5,14 +5,18 @@ from tqdm import tqdm
 
 
 class FTPClient:
-    def __init__(self, verbose=False):
+    def __init__(self, host, verbose=False):
         '''Inits connexion with the distant FTP server.'''
 
+        self.verbose = verbose
+
+        if self.verbose:
+            print('Attempting connexion to {}...'.format(host))
         # ping echanges.dila.gouv.fr
         # 185.24.187.136
-        self.ftp = FTP('echanges.dila.gouv.fr')
+        self.host = host
+        self.ftp = FTP(self.host)
         self.ftp.login()
-        self.verbose = verbose
 
     def retrieveFiles(self, dirPath, outputFolder, regex=None):
         '''Downloads all files in a given directory.'''
@@ -40,7 +44,7 @@ class FTPClient:
 
 
 # %% Test Cell
-ftpClient = FTPClient(verbose=True)
+ftpClient = FTPClient('echanges.dila.gouv.fr', verbose=True)
 ftpClient.retrieveFiles(
     'JORFSIMPLE',
     '/home/alexis/parsing-journal-officiel/parsing_xml/data/JORFSIMPLE/tarballs/',
