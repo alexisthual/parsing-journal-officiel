@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
     # Generate regex for catching all XML files
     currentDir = os.getcwd()
-    dataDir = 'data/JORFSIMPLE'
+    dataDir = 'data/JORFSIMPLE/extracted/'
     filePathRegex = '*/jorf/simple/JORF/CONT/**/*.xml'
     fileAbsPath = os.path.join(currentDir, dataDir, filePathRegex)
 
