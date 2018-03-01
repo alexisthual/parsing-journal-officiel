@@ -9,6 +9,8 @@ class FileExtracter:
         self.verbose = verbose
 
     def extractAll(self, fromDir, toDir):
+        '''Extracts all files from all tarballs present in a given directory.'''
+
         if self.verbose:
             print('Extracting tarballs...')
 
@@ -17,10 +19,3 @@ class FileExtracter:
                 tar = tarfile.open(os.path.join(fromDir, fileName))
                 tar.extractall(path=toDir)
                 tar.close()
-
-# %% Test Cell
-fileExtracter = FileExtracter(verbose=True)
-fileExtracter.extractAll(
-    '/home/alexis/parsing-journal-officiel/parsing_xml/data/JORFSIMPLE/tarballs',
-    '/home/alexis/parsing-journal-officiel/parsing_xml/data/JORFSIMPLE/extracted'
-)

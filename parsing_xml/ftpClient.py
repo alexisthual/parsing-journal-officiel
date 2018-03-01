@@ -12,6 +12,7 @@ class FTPClient:
 
         if self.verbose:
             print('Attempting connexion to {}...'.format(host))
+
         # ping echanges.dila.gouv.fr
         # 185.24.187.136
         self.host = host
@@ -40,14 +41,6 @@ class FTPClient:
                     f.close()
 
     def terminate(self):
+        '''Terminate FTP connexion.'''
+
         self.ftp.quit()
-
-
-# %% Test Cell
-ftpClient = FTPClient('echanges.dila.gouv.fr', verbose=True)
-ftpClient.retrieveFiles(
-    'JORFSIMPLE',
-    '/home/alexis/parsing-journal-officiel/parsing_xml/data/JORFSIMPLE/tarballs/',
-    regex='.*2018.*\-.*\.tar\.gz'
-)
-ftpClient.terminate()

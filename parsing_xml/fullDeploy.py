@@ -3,14 +3,14 @@ import os
 import re
 from tqdm import tqdm
 
+from ftpClient import FTPClient
+from fileExtracter import FileExtracter
 from parsers.JORFContextParser import SummaryParser
 from parsers.JORFTextParser import ArticleParser
 from databaseManager import DatabaseManager
 
-# %% Test cell
 
-
-# %% Main cell
+# %% Util functions cell
 def recursiveSearch(dirAbsPath):
     '''Util function iterating through the directories of a given directory.
     It returns False in case there are several possible directories.'''
@@ -29,30 +29,45 @@ def shouldExploreDir(dirAbsPath):
 
     return recursiveSearch(dirAbsPath)
 
+# %% Main Cell
 if __name__ == '__main__':
-    '''Explores folders in a given directory. Parses them and adds them
-    to the locally running ElasticSearch instance, assuming each folder
-    is a seperate publication of the JORF.'''
+    verbose = True
+    cwd = os.getcwd()
+
+    # Connext to distant FTP server and download tarballs
+    ftpClient = FTPClient('echanges.dila.gouv.fr', verbose=verbose)
+    ftpClient.retrieveFiles(
+        'JORFSIMPLE',
+        os.path.join(cwd, 'parsing_xml/data/JORFSIMPLE/tarballs/'),
+        regex='.*2018.*\-.*\.tar\.gz'
+    )
+    ftpClient.terminate()
+
+    # Untar downloaded tarballs
+    fileExtracter = FileExtracter(verbose=verbose)
+    fileExtracter.extractAll(
+        os.path.join(cwd, 'parsing_xml/data/JORFSIMPLE/tarballs'),
+        os.path.join(cwd, 'parsing_xml/data/JORFSIMPLE/extracted')
+    )
 
     # Generate regex for catching all XML files
-    currentDir = os.getcwd()
-    dataDir = 'data/JORFSIMPLE/extracted/'
+    dataDir = 'parsing_xml/data/JORFSIMPLE/extracted/'
     filePathRegex = '*/jorf/simple/JORF/CONT/**/*.xml'
-    fileAbsPath = os.path.join(currentDir, dataDir, filePathRegex)
+    fileAbsPath = os.path.join(cwd, dataDir, filePathRegex)
 
     # Regex to use in order to extract the file's name
     # from a given path
     fileNameRegex = re.compile('.*\/([a-zA-Z0-9]+\.xml)')
 
     # Initiabe db
-    dbm = DatabaseManager(overwriteIndices=True, verbose=True)
+    dbm = DatabaseManager(overwriteIndices=True, verbose=verbose)
     dbm.initESIndexes()
 
     # Initiate parsers
     summaryParser = SummaryParser()
     articleParser = ArticleParser()
 
-    dataDirPath = os.path.join(currentDir, dataDir)
+    dataDirPath = os.path.join(cwd, dataDir)
 
     for dirName in tqdm(os.listdir(dataDirPath)):
         dirAbsPath = os.path.join(dataDirPath, dirName, 'jorf/simple/JORF')
