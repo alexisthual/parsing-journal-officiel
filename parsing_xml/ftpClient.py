@@ -1,10 +1,11 @@
 import os
+import re
 from ftplib import FTP
 from tqdm import tqdm
 
 
 class FTPClient:
-    def __init__(self, outputFolder):
+    def __init__(self, outputFolder, verbose=False):
         '''Inits connexion with the distant FTP server.'''
 
         # ping echanges.dila.gouv.fr
@@ -12,23 +13,34 @@ class FTPClient:
         self.ftp = FTP('echanges.dila.gouv.fr')
         self.ftp.login()
         self.outputFolder = outputFolder
+        self.verbose = verbose
 
-    def downloadFolder(self, dirPath):
+    def retrieveFiles(self, dirPath):
         '''Downloads all files in a given directory.'''
 
-        pwd = self.ftp.pwd()
-        print(self.ftp.dir('JORFSIMPLE'))
+        self.ftp.cwd(dirPath)
+        fileNames = self.ftp.nlst()
 
-        for lsOutputLine in tqdm(self.ftp.dir(os.path.join(pwd, dirPath))):
-            print(lsOutputLine)
-            if re.match('.*2018[a-zA-Z0-9]+\.tar\.gz', lsOutputLine):
-                fileName = re.search('.*([a-zA-Z0-9]+)\.tar\.gz').group(1)
+        if self.verbose:
+            print('Retrieved file list.')
+
+        fileNames = list(filter(lambda x: re.match('.*2018.*\-.*\.tar\.gz', x), fileNames))
+
+        if self.verbose:
+            print('Downloading tarballs...')
+
+        for fileName in tqdm(fileNames):
+            if not re.match('.*Freemium.*', fileName):
                 with open(os.path.join(self.outputFolder, fileName), 'wb') as f:
                     self.ftp.retrbinary('RETR {}'.format(fileName), f.write)
                     f.close()
 
+    def terminate(self):
+        self.ftp.quit()
+
 
 # %% Test Cell
-outputFolder = '/home/alexis/parsing-journal-officiel/parsing_xml/data/JORFSIMPLE'
-ftpClient = FTPClient(outputFolder)
-ftpClient.downloadFolder('JORFSIMPLE')
+outputFolder = '/home/alexis/parsing-journal-officiel/parsing_xml/data/JORFSIMPLE/tarballs/'
+ftpClient = FTPClient(outputFolder, verbose=True)
+ftpClient.retrieveFiles('JORFSIMPLE')
+ftpClient.terminate()
