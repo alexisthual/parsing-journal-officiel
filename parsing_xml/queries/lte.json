@@ -1,0 +1,16 @@
+{
+	"query": {
+		"range": {
+			"DATE_PUBLI": {
+				"lte": "2018-02-01||+1M/M",
+				"gte": "2018-02-10||-1M/M",
+				"format": "yyyy-MM-dd"
+			}
+		}
+	},
+	"size": 35,
+	"_source": ["DATE_PUBLI"],
+	"sort": {
+		"DATE_PUBLI": "asc"
+	}
+}
