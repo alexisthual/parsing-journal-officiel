@@ -9,7 +9,6 @@
 		}
 	},
 	"size": 35,
-	"_source": ["DATE_PUBLI"],
 	"sort": {
 		"DATE_PUBLI": "asc"
 	}

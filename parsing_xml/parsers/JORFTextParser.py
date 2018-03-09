@@ -13,7 +13,8 @@ class ArticleParser:
         self.getTextTags = [
             'ID', 'ID_ELI', 'ORIGINE', 'NATURE', 'NOR',
             'DATE_PUBLI', 'DATE_TEXTE', 'ORIGINE_PUBLI',
-            'TITRE', 'TITREFULL', 'AUTORITE', 'MINISTERE']
+            'TITRE', 'TITREFULL', 'AUTORITE', 'MINISTERE'
+        ]
         self.getContenuTags = ['NOTICE', 'VISAS', 'ABRO', 'RECT', 'SM', 'TP']
         self.getTextArticleTags = ['ID', 'ID_ELI']
         self.getContenuArticleTags = ['SM', 'BLOC_TEXTUEL']
