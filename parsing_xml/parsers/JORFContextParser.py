@@ -18,13 +18,12 @@ class SummaryParser:
     def initiate(self):
         self.information = {}
 
-    def parse(self, absPath):
+    def parse(self, xmlStringContent):
         '''Takes the absolute path to the file to be parsed
         and parses it.'''
 
         self.initiate()
-        self.tree = ET.parse(absPath)
-        self.root = self.tree.getroot()
+        self.root = ET.fromstring(xmlStringContent)
 
         for element in self.root:
             tag = element.tag
@@ -35,7 +34,7 @@ class SummaryParser:
                 self.parseStructureText(element)
                 self.information['STRUCTURE_TXT'] = self.parsedTree
 
-        return json.dumps(self.information)
+        return json.dumps(self.information), self.information['ID']
 
     def parseStructureText(self, parentElement):
         currentDepth = 0

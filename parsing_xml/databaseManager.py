@@ -105,8 +105,8 @@ class DatabaseManager:
         )
         self.es.indices.open(index='article')
 
-    def addSummary(self, nodeData):
-        self.es.index(index='summary', doc_type='nodes', body=nodeData)
+    def addSummary(self, nodeData, documentId=None):
+        self.es.index(index='summary', doc_type='nodes', body=nodeData, id=documentId)
 
-    def addArticle(self, nodeData):
-        self.es.index(index='article', doc_type='nodes', body=nodeData)
+    def addArticle(self, nodeData, documentId=None):
+        self.es.index(index='article', doc_type='nodes', body=nodeData, id=documentId)

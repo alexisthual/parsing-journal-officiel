@@ -25,13 +25,12 @@ class ArticleParser:
         self.articles = []
         self.signataires = None
 
-    def parse(self, absPath):
+    def parse(self, xmlStringContent):
         '''Takes the absolute path to the file to be parsed
         and parses it.'''
 
         self.initiate()
-        self.tree = ET.parse(absPath)
-        self.root = self.tree.getroot()
+        self.root = ET.fromstring(xmlStringContent)
 
         for element in self.root:
             tag = element.tag
@@ -50,7 +49,7 @@ class ArticleParser:
             'signataires': self.signataires
         }
 
-        return json.dumps(self.information)
+        return json.dumps(self.information), self.information['ID']
 
     def getContenu(self, element):
         '''Util function for getting the inner text of a xml tag

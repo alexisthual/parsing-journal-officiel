@@ -35,10 +35,17 @@ class FTPClient:
             print('Downloading tarballs...')
 
         for fileName in tqdm(fileNames):
+            definitiveOutputFolder = outputFolder
+
+            # If the file's name doesn't contain 'Freemium', then it is
+            # an incremental folder.
             if not re.match('.*Freemium.*', fileName):
-                with open(os.path.join(outputFolder, fileName), 'wb') as f:
-                    self.ftp.retrbinary('RETR {}'.format(fileName), f.write)
-                    f.close()
+                definitiveOutputFolder = os.path.join(outputFolder, 'incremental')
+
+                if re.match('.*\.tar\.gz', fileName):
+                    with open(os.path.join(definitiveOutputFolder, fileName), 'wb') as f:
+                        self.ftp.retrbinary('RETR {}'.format(fileName), f.write)
+                        f.close()
 
     def terminate(self):
         '''Terminate FTP connexion.'''
