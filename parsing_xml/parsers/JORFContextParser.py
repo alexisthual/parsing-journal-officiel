@@ -78,10 +78,14 @@ class SummaryParser:
         for child in node.children:
             if child.is_leaf:
                 # This means the current child should be a LIEN_TXT
-                information['links'].append({
-                    'idtxt': child.idtxt,
-                    'titre': child.titre
-                })
+                try:
+                    information['links'].append({
+                        'idtxt': child.idtxt,
+                        'titre': child.titre
+                    })
+                except:
+                    print('idtxt or titre missing for {}'.format(information['name']))
+                    pass
             else:
                 information['children'].append(
                     self.recursiveParseNode(child)
