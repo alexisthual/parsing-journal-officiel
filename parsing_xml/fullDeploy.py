@@ -80,7 +80,8 @@ if __name__ == '__main__':
 
     # 3. Iterate through tarballs and populate database
     for tarballFileName in tqdm(glob.glob(dataDirPath, recursive=True)):
-        if re.match('.*\.tar\.gz', tarballFileName) and re.match('^((?!Freemium).)*$', tarballFileName):
+        # if re.match('.*\.tar\.gz', tarballFileName) and re.match('^((?!Freemium).)*$', tarballFileName):
+        if re.match('.*\.tar\.gz', tarballFileName):
             # Open tarball
             tarballAbsPath = os.path.join(dataDirPath, tarballFileName)
             tar = tarfile.open(tarballAbsPath, 'r:gz')
