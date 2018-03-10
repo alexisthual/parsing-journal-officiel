@@ -85,7 +85,6 @@ class SummaryParser:
                     })
                 except:
                     print('idtxt or titre missing for {}'.format(information['name']))
-                    pass
             else:
                 information['children'].append(
                     self.recursiveParseNode(child)
