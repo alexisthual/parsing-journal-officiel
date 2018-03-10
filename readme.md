@@ -8,12 +8,13 @@ français, de les analyser et de les ajouter à une base de données.
 * Une instance ElasticSearch (>= 6.0.2) doit être démarrée sur la machine sur laquelle
 vous exécutez le code actuel.
 * Ensuite, il suffit d'exécuter les commandes suivantes :
-```cd parsing_xml
-python3 fullDeploy.py
+```
+cd parsing_xml
+python3 ./fullDeploy.py
 ```
 
 Certaines dépendances sont requises pour exécuter ce code, parmi lesquelles :
-* elasticsearch (`pip3 install elasticsearch`)
+* le client Python 3 d'elasticsearch (`pip3 install elasticsearch`)
 * tqdm
 * anytree
 
