@@ -57,7 +57,8 @@ if __name__ == '__main__':
 
     # CONSTANTS
     verbose = True
-    shouldDownloadTarballs = True
+    shouldDownloadTarballs = False
+
     cwd = os.getcwd()
     dataDirPath = os.path.join(cwd, 'data/JORFSIMPLE/**/*.tar.gz')
     fileNameRegex = re.compile('.*jorf/simple/JORF/CONT/([0-9]{2}/){5}[a-zA-Z0-9]+/[a-zA-Z0-9]+\.xml')
@@ -79,33 +80,43 @@ if __name__ == '__main__':
     articleParser = ArticleParser()
 
     # 3. Iterate through tarballs and populate database
+    # IMPORTANT: the following piece of code is only valid if tarballs are
+    # ordered correctly. Indeed, incremental files potentially modify files
+    # which where previously put in the database. Eventually, this requires
+    # that incremental files are treated in the right order (which should here
+    # be the case the they are implicitely ordered by file name, which here
+    # implies chronological sorting as well).
     for tarballFileName in tqdm(glob.glob(dataDirPath, recursive=True)):
         # if re.match('.*\.tar\.gz', tarballFileName) and re.match('^((?!Freemium).)*$', tarballFileName):
         if re.match('.*\.tar\.gz', tarballFileName):
             # Open tarball
             tarballAbsPath = os.path.join(dataDirPath, tarballFileName)
-            tar = tarfile.open(tarballAbsPath, 'r:gz')
+            with tarfile.open(tarballAbsPath, 'r:gz') as tar:
+                # List valid XML files in the tarball
+                files = [d for d in tar.getmembers() if re.match(fileNameRegex, d.name)]
 
-            # List valid XML files in the tarball
-            files = [d for d in tar.getmembers() if re.match(fileNameRegex, d.name)]
+                # Iterate through valid XML files and populate database
+                for tarInfo in tqdm(files):
+                    tarFile = tar.extractfile(tarInfo)
 
-            # Iterate through valid XML files and populate database
-            for tarInfo in tqdm(files):
-                tarFile = tar.extractfile(tarInfo)
+                    # Checks that the tar member is correctly loaded
+                    if tarFile:
+                        content = tarFile.read().decode('utf-8')
 
-                # Checks that the tar member is correctly loaded
-                if tarFile:
-                    content = tarFile.read().decode('utf-8')
+                        # Populate database after checking document type (ex: summary, article, etc)
+                        if re.match('.*CONT[a-zA-Z0-9]+\.xml$', tarInfo.name) != None:
+                            parsedSummary, documentId = summaryParser.parse(content)
+                            dbm.addSummary(parsedSummary, documentId=documentId)
+                        elif re.match('.*TEXT[a-zA-Z0-9]+\.xml$', tarInfo.name) != None:
+                            parsedArticle, documentId = articleParser.parse(content)
+                            dbm.addArticle(parsedArticle, documentId=documentId)
 
-                    # Populate database after checking document type (ex: summary, article, etc)
-                    if re.match('.*CONT[a-zA-Z0-9]+\.xml$', tarInfo.name) != None:
-                        parsedSummary, documentId = summaryParser.parse(content)
-                        dbm.addSummary(parsedSummary, documentId=documentId)
-                    elif re.match('.*TEXT[a-zA-Z0-9]+\.xml$', tarInfo.name) != None:
-                        parsedArticle, documentId = articleParser.parse(content)
-                        dbm.addArticle(parsedArticle, documentId=documentId)
+                tar.close()
 
 # %% Test cell
+# This cell currently tests whether files present in the Freemium tarball
+# refer to uniquely defined articles and summaries.
+
 # p = '/home/alexis/parsing-journal-officiel/parsing_xml/data/JORFSIMPLE/Freemium_jorf_simple_20170302-103615.tar.gz'
 # tar = tarfile.open(p, 'r:gz')
 #

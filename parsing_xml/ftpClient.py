@@ -42,10 +42,10 @@ class FTPClient:
             if not re.match('.*Freemium.*', fileName):
                 definitiveOutputFolder = os.path.join(outputFolder, 'incremental')
 
-                if re.match('.*\.tar\.gz', fileName):
-                    with open(os.path.join(definitiveOutputFolder, fileName), 'wb') as f:
-                        self.ftp.retrbinary('RETR {}'.format(fileName), f.write)
-                        f.close()
+            if re.match('.*\.tar\.gz', fileName):
+                with open(os.path.join(definitiveOutputFolder, fileName), 'wb') as f:
+                    self.ftp.retrbinary('RETR {}'.format(fileName), f.write)
+                    f.close()
 
     def terminate(self):
         '''Terminate FTP connexion.'''
