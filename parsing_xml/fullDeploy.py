@@ -107,7 +107,6 @@ if __name__ == '__main__':
                     tarballBar.set_description(desc='Adding members')
                     with tqdm(total=len(memberNames)) as memberBar:
                         for memberName in memberNames:
-                            # with tar.extractfile(tarInfo) as tarFile:
                             memberBar.set_description(desc='Extracting file')
                             tarFile = tar.extractfile(memberName)
                             # Checks that the tar member is correctly loaded
@@ -124,6 +123,7 @@ if __name__ == '__main__':
                                     parsedArticle, documentId = articleParser.parse(content)
                                     dbm.addArticle(parsedArticle, documentId=documentId)
 
+                            tarFile.close()
                             memberBar.update(1)
 
 # %% Test cell
