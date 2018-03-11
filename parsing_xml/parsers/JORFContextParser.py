@@ -83,8 +83,9 @@ class SummaryParser:
                         'idtxt': child.idtxt,
                         'titre': child.titre
                     })
-                except:
-                    print('idtxt or titre missing for {}'.format(information['name']))
+                except Exception as e:
+                    with open('./logs.txt', 'a+') as logFile:
+                        logFile.write('{} - {}'.format(str(datetime.datetime.now()), e))
             else:
                 information['children'].append(
                     self.recursiveParseNode(child)

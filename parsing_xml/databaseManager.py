@@ -1,6 +1,6 @@
+import datetime
 import json
 import os
-import time
 from tqdm import tqdm
 from elasticsearch import Elasticsearch
 
@@ -106,7 +106,15 @@ class DatabaseManager:
         self.es.indices.open(index='article')
 
     def addSummary(self, nodeData, documentId=None):
-        self.es.index(index='summary', doc_type='nodes', body=nodeData, id=documentId)
+        try:
+            self.es.index(index='summary', doc_type='nodes', body=nodeData, id=documentId)
+        except Exception as e:
+            with open('./logs.txt', 'a+') as logFile:
+                logFile.write('{} - {}'.format(str(datetime.datetime.now()), e))
 
     def addArticle(self, nodeData, documentId=None):
-        self.es.index(index='article', doc_type='nodes', body=nodeData, id=documentId)
+        try:
+            self.es.index(index='article', doc_type='nodes', body=nodeData, id=documentId)
+        except Exception as e:
+            with open('./logs.txt', 'a+') as logFile:
+                logFile.write('{} - {}'.format(str(datetime.datetime.now()), e))

@@ -1,6 +1,5 @@
-.idea/parsing-journal-officiel.iml
-
 parsing_xml/data/*
+**/logs.txt
 
 scrapping/output/*
 scrapping/output_save/*
