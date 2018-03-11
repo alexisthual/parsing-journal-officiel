@@ -57,9 +57,10 @@ if __name__ == '__main__':
 
     # CONSTANTS
     verbose = True
+    overwriteIndices = False
     downloadTarballs = False
     downloadFreemium = False
-    parseFreemium = False
+    parseFreemium = True
 
     cwd = os.getcwd()
     dataDirPath = os.path.join(cwd, 'data/JORFSIMPLE/**/*.tar.gz')
@@ -76,7 +77,7 @@ if __name__ == '__main__':
         ftpClient.terminate()
 
     # 2. Init and create parsers
-    dbm = DatabaseManager(overwriteIndices=True, verbose=verbose)
+    dbm = DatabaseManager(overwriteIndices=overwriteIndices, verbose=verbose)
     dbm.initESIndexes()
 
     summaryParser = SummaryParser()
@@ -98,7 +99,7 @@ if __name__ == '__main__':
                 tarballAbsPath = os.path.join(dataDirPath, tarballFileName)
                 tarballBar.set_description(desc='Opening tarball')
 
-                with tarfile.open(tarballAbsPath, 'r:gz') as tar:
+                with tarfile.open(tarballAbsPath, 'r|gz') as tar:
                     # List valid XML files in the tarball
                     tarballBar.set_description(desc='Listing members')
                     memberNames = [name for name in tar.getnames() if re.match(fileNameRegex, name)]
