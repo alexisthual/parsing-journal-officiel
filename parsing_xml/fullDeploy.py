@@ -123,7 +123,6 @@ if __name__ == '__main__':
                                     parsedArticle, documentId = articleParser.parse(content)
                                     dbm.addArticle(parsedArticle, documentId=documentId)
 
-                            tarFile.close()
                             memberBar.update(1)
 
 # %% Test cell
