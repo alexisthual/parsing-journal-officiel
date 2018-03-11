@@ -92,36 +92,32 @@ if __name__ == '__main__':
     # implies chronological sorting as well).
     tarballFileNames = glob.glob(dataDirPath, recursive=True)
 
-    with tqdm(total=len(tarballFileNames)) as tarballBar:
-        for tarballFileName in tarballFileNames:
-            if re.match('.*\.tar\.gz', tarballFileName) and (parseFreemium or re.match('^((?!Freemium).)*$', tarballFileName)):
-                # Open tarball
-                tarballAbsPath = os.path.join(dataDirPath, tarballFileName)
-                tarballBar.set_description(desc='Opening tarball')
+    for tarballFileName in tqdm(tarballFileNames):
+        if re.match('.*\.tar\.gz', tarballFileName) and (parseFreemium or re.match('^((?!Freemium).)*$', tarballFileName)):
+            tarballAbsPath = os.path.join(dataDirPath, tarballFileName)
 
-                with tarfile.open(tarballAbsPath, 'r|gz') as tar:
-                    # List valid XML files in the tarball
-                    with tqdm() as memberBar:
-                        # Load tarball's next header
+            with tarfile.open(tarballAbsPath, 'r|gz') as tar:
+                with tqdm() as memberBar:
+                    # Load tarball's next header
+                    member = tar.next()
+                    while member:
+                        # Check that the current file name is suitable.
+                        if re.match(fileNameRegex, member.name):
+                            tarFile = tar.extractfile(member)
+                            if tarFile:
+                                content = tarFile.read().decode('utf-8')
+
+                                # Populate database after checking document type (ex: summary, article, etc)
+                                if re.match('.*CONT[a-zA-Z0-9]+\.xml$', member.name) != None:
+                                    parsedSummary, documentId = summaryParser.parse(content)
+                                    dbm.addSummary(parsedSummary, documentId=documentId)
+                                elif re.match('.*TEXT[a-zA-Z0-9]+\.xml$', member.name) != None:
+                                    parsedArticle, documentId = articleParser.parse(content)
+                                    dbm.addArticle(parsedArticle, documentId=documentId)
+
+                                memberBar.update(1)
+
                         member = tar.next()
-                        while member:
-                            # Check that the current file name is suitable correct.
-                            if re.match(fileNameRegex, member.name):
-                                tarFile = tar.extractfile(member)
-                                if tarFile:
-                                    content = tarFile.read().decode('utf-8')
-
-                                    # Populate database after checking document type (ex: summary, article, etc)
-                                    if re.match('.*CONT[a-zA-Z0-9]+\.xml$', member.name) != None:
-                                        parsedSummary, documentId = summaryParser.parse(content)
-                                        dbm.addSummary(parsedSummary, documentId=documentId)
-                                    elif re.match('.*TEXT[a-zA-Z0-9]+\.xml$', member.name) != None:
-                                        parsedArticle, documentId = articleParser.parse(content)
-                                        dbm.addArticle(parsedArticle, documentId=documentId)
-
-                                    memberBar.update(1)
-
-                            member = tar.next()
 
 # %% Test cell
 # This cell currently tests whether files present in the Freemium tarball
