@@ -19,7 +19,7 @@ class FTPClient:
         self.ftp = FTP(self.host)
         self.ftp.login()
 
-    def retrieveFiles(self, dirPath, outputFolder, regex=None):
+    def retrieveFiles(self, dirPath, outputFolder, regex=None, downloadFreemium=True):
         '''Downloads all files in a given directory.'''
 
         self.ftp.cwd(dirPath)
@@ -41,6 +41,8 @@ class FTPClient:
             # an incremental folder.
             if not re.match('.*Freemium.*', fileName):
                 definitiveOutputFolder = os.path.join(outputFolder, 'incremental')
+            elif not downloadFreemium:
+                continue
 
             if re.match('.*\.tar\.gz', fileName):
                 with open(os.path.join(definitiveOutputFolder, fileName), 'wb') as f:
