@@ -58,7 +58,7 @@ if __name__ == '__main__':
     # CONSTANTS
     verbose = True
     overwriteIndices = False
-    downloadTarballs = False
+    downloadTarballs = True
     downloadFreemium = False
     parseFreemium = True
 
@@ -72,6 +72,7 @@ if __name__ == '__main__':
         ftpClient.retrieveFiles(
             'JORFSIMPLE',
             os.path.join(cwd, 'data/JORFSIMPLE/'),
+            downloadedListFile=os.path.join(cwd, 'data/JORFSIMPLE/downloaded.txt'),
             downloadFreemium=downloadFreemium
         )
         ftpClient.terminate()
@@ -90,11 +91,23 @@ if __name__ == '__main__':
     # that incremental files are treated in the right order (which should here
     # be the case the they are implicitely ordered by file name, which here
     # implies chronological sorting as well).
-    tarballFileNames = glob.glob(dataDirPath, recursive=True)
+    tarballAbsPaths = glob.glob(dataDirPath, recursive=True)
 
-    for tarballFileName in tqdm(tarballFileNames):
-        if re.match('.*\.tar\.gz', tarballFileName) and (parseFreemium or re.match('^((?!Freemium).)*$', tarballFileName)):
-            tarballAbsPath = os.path.join(dataDirPath, tarballFileName)
+    previouslyParsedFileList = []
+    parsedListFile = os.path.join(cwd, 'data/JORFSIMPLE/parsed.txt')
+
+    if parsedListFile:
+        with open(parsedListFile, 'r+') as f:
+            for line in f:
+                previouslyParsedFileList.append(line.rstrip())
+
+    for tarballAbsPath in tqdm(tarballAbsPaths):
+        tarballFileName = re.search('\/([^\/]+)$', tarballAbsPath).group(1)
+
+        if re.match('.*\.tar\.gz', tarballAbsPath) and\
+           (parseFreemium or re.match('^((?!Freemium).)*$', tarballAbsPath)) and\
+           (tarballFileName not in previouslyParsedFileList):
+            # tarballAbsPath = os.path.join(dataDirPath, tarballAbsPath)
 
             with tarfile.open(tarballAbsPath, 'r|gz') as tar:
                 with tqdm() as memberBar:
@@ -118,6 +131,9 @@ if __name__ == '__main__':
                                 memberBar.update(1)
 
                         member = tar.next()
+
+                with open(parsedListFile, 'a+') as f:
+                    f.write(tarballFileName + '\n')
 
 # %% Test cell
 # This cell currently tests whether files present in the Freemium tarball

@@ -19,11 +19,18 @@ class FTPClient:
         self.ftp = FTP(self.host)
         self.ftp.login()
 
-    def retrieveFiles(self, dirPath, outputFolder, regex=None, downloadFreemium=True):
+    def retrieveFiles(self, dirPath, outputFolder, downloadedListFile=None,
+                      regex=None, downloadFreemium=True):
         '''Downloads all files in a given directory.'''
 
         self.ftp.cwd(dirPath)
         fileNames = self.ftp.nlst()
+        previouslyDownloadedFileList = []
+
+        if downloadedListFile:
+            with open(downloadedListFile, 'r+') as f:
+                for line in f:
+                    previouslyDownloadedFileList.append(line.rstrip())
 
         if self.verbose:
             print('Retrieved file list.')
@@ -44,10 +51,13 @@ class FTPClient:
             elif not downloadFreemium:
                 continue
 
-            if re.match('.*\.tar\.gz', fileName):
+            if re.match('.*\.tar\.gz', fileName) and (fileName not in previouslyDownloadedFileList):
                 with open(os.path.join(definitiveOutputFolder, fileName), 'wb') as f:
                     self.ftp.retrbinary('RETR {}'.format(fileName), f.write)
-                    f.close()
+
+                if downloadedListFile:
+                    with open(downloadedListFile, 'a+') as f:
+                        f.write(fileName + '\n')
 
     def terminate(self):
         '''Terminate FTP connexion.'''
