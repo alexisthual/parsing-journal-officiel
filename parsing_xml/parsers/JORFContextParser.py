@@ -1,9 +1,9 @@
-import datetime
 import json
 import os
 import xml.etree.ElementTree as ET
 
 from anytree import Node, RenderTree
+from datetime import datetime
 
 
 # %% Summary parsing
@@ -89,7 +89,7 @@ class SummaryParser:
                 except Exception as e:
                     if self.logFile:
                         with open(self.logFile, 'a+') as f:
-                            f.write('{} - {}'.format(str(datetime.datetime.now()), e))
+                            f.write('{};{}\n'.format(str(datetime.now()), e))
             else:
                 information['children'].append(
                     self.recursiveParseNode(child)

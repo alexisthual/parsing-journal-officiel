@@ -1,5 +1,6 @@
 import os
 import re
+from datetime import datetime
 from ftplib import FTP
 from tqdm import tqdm
 
@@ -30,7 +31,7 @@ class FTPClient:
         if downloadsLogFile and os.path.isfile(downloadsLogFile):
             with open(downloadsLogFile, 'r') as f:
                 for line in f:
-                    previouslyDownloadedFileList.append(line.rstrip())
+                    previouslyDownloadedFileList.append(line.split(';')[1].rstrip())
 
         if self.verbose:
             print('Retrieved file list.')
@@ -57,7 +58,7 @@ class FTPClient:
 
                 if downloadsLogFile:
                     with open(downloadsLogFile, 'a+') as f:
-                        f.write(fileName + '\n')
+                        f.write('{};{}\n'.format(str(datetime.now()), fileName))
 
     def terminate(self):
         '''Terminate FTP connexion.'''

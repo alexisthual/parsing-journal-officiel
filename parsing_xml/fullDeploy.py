@@ -2,6 +2,7 @@ import glob
 import os
 import re
 import tarfile
+from datetime import datetime
 from tqdm import tqdm
 
 from ftpClient import FTPClient
@@ -103,7 +104,8 @@ if __name__ == '__main__':
     if os.path.isfile(parsedLogFile):
         with open(parsedLogFile, 'r') as f:
             for line in f:
-                previouslyParsedFileList.append(line.rstrip())
+                print('here: {}'.format(line))
+                previouslyParsedFileList.append(line.split(';')[1].rstrip())
 
     for tarballAbsPath in tqdm(tarballAbsPaths):
         tarballFileName = re.search('\/([^\/]+)$', tarballAbsPath).group(1)
@@ -137,7 +139,7 @@ if __name__ == '__main__':
                         member = tar.next()
 
                 with open(parsedLogFile, 'a+') as f:
-                    f.write(tarballFileName + '\n')
+                    f.write('{};{}\n'.format(str(datetime.now()), tarballFileName))
 
 # %% Test cell
 # This cell currently tests whether files present in the Freemium tarball
