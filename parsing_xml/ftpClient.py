@@ -28,7 +28,7 @@ class FTPClient:
         previouslyDownloadedFileList = []
 
         if downloadsLogFile and os.path.isfile(downloadsLogFile):
-            with open(downloadsLogFile, 'r+') as f:
+            with open(downloadsLogFile, 'r') as f:
                 for line in f:
                     previouslyDownloadedFileList.append(line.rstrip())
 

@@ -100,9 +100,10 @@ if __name__ == '__main__':
     tarballAbsPaths = glob.glob(dataDirPath, recursive=True)
     previouslyParsedFileList = []
 
-    with open(parsedLogFile, 'r+') as f:
-        for line in f:
-            previouslyParsedFileList.append(line.rstrip())
+    if os.path.isfile(parsedLogFile):
+        with open(parsedLogFile, 'r') as f:
+            for line in f:
+                previouslyParsedFileList.append(line.rstrip())
 
     for tarballAbsPath in tqdm(tarballAbsPaths):
         tarballFileName = re.search('\/([^\/]+)$', tarballAbsPath).group(1)
