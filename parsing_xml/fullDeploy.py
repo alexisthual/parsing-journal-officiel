@@ -104,7 +104,6 @@ if __name__ == '__main__':
     if os.path.isfile(parsedLogFile):
         with open(parsedLogFile, 'r') as f:
             for line in f:
-                print('here: {}'.format(line))
                 previouslyParsedFileList.append(line.split(';')[1].rstrip())
 
     for tarballAbsPath in tqdm(tarballAbsPaths):
