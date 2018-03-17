@@ -64,6 +64,7 @@ if __name__ == '__main__':
 
     cwd = os.getcwd()
     dataDirPath = os.path.join(cwd, 'data/JORFSIMPLE/**/*.tar.gz')
+    logsDirPath = os.path.join(cwd, 'logs/JORFSIMPLE')
     fileNameRegex = re.compile('.*jorf/simple/JORF/CONT/([0-9]{2}/){5}[a-zA-Z0-9]+/[a-zA-Z0-9]+\.xml')
 
     # 1. Collect tarballs
@@ -72,7 +73,7 @@ if __name__ == '__main__':
         ftpClient.retrieveFiles(
             'JORFSIMPLE',
             os.path.join(cwd, 'data/JORFSIMPLE/'),
-            downloadedListFile=os.path.join(cwd, 'data/JORFSIMPLE/downloaded.txt'),
+            logsDirPath=logsDirPath,
             downloadFreemium=downloadFreemium
         )
         ftpClient.terminate()
@@ -92,14 +93,11 @@ if __name__ == '__main__':
     # be the case the they are implicitely ordered by file name, which here
     # implies chronological sorting as well).
     tarballAbsPaths = glob.glob(dataDirPath, recursive=True)
-
     previouslyParsedFileList = []
-    parsedListFile = os.path.join(cwd, 'data/JORFSIMPLE/parsed.txt')
 
-    if parsedListFile:
-        with open(parsedListFile, 'r+') as f:
-            for line in f:
-                previouslyParsedFileList.append(line.rstrip())
+    with open(os.path.join(logsDirPath, 'parsed.txt'), 'r+') as f:
+        for line in f:
+            previouslyParsedFileList.append(line.rstrip())
 
     for tarballAbsPath in tqdm(tarballAbsPaths):
         tarballFileName = re.search('\/([^\/]+)$', tarballAbsPath).group(1)

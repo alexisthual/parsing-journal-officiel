@@ -1,4 +1,5 @@
 parsing_xml/data/*
+parsing_xml/logs/
 **/logs.txt
 
 scrapping/output/*
