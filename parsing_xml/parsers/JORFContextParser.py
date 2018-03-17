@@ -10,10 +10,12 @@ from anytree import Node, RenderTree
 class SummaryParser:
     '''Creates an XML parser for JORF CONT files.'''
 
-    def __init__(self):
+    def __init__(self, logFile=None):
         '''Inits parser with basic information.'''
 
         self.getTextTags = ['ID', 'ID_ELI', 'ORIGINE', 'TITRE', 'DATE_PUBLI']
+        self.logFile = logFile
+
         self.initiate()
 
     def initiate(self):
@@ -85,8 +87,9 @@ class SummaryParser:
                         'titre': child.titre
                     })
                 except Exception as e:
-                    with open('./logs.txt', 'a+') as logFile:
-                        logFile.write('{} - {}'.format(str(datetime.datetime.now()), e))
+                    if self.logFile:
+                        with open(self.logFile, 'a+') as f:
+                            f.write('{} - {}'.format(str(datetime.datetime.now()), e))
             else:
                 information['children'].append(
                     self.recursiveParseNode(child)

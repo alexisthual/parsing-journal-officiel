@@ -65,6 +65,11 @@ if __name__ == '__main__':
     cwd = os.getcwd()
     dataDirPath = os.path.join(cwd, 'data/JORFSIMPLE/**/*.tar.gz')
     logsDirPath = os.path.join(cwd, 'logs/JORFSIMPLE')
+
+    downloadsLogFile = os.path.join(logsDirPath, 'downloaded.txt')
+    parsedLogFile = os.path.join(logsDirPath, 'parsed.txt')
+    logFile = os.path.join(logsDirPath, 'logs.txt')
+
     fileNameRegex = re.compile('.*jorf/simple/JORF/CONT/([0-9]{2}/){5}[a-zA-Z0-9]+/[a-zA-Z0-9]+\.xml')
 
     # 1. Collect tarballs
@@ -73,7 +78,7 @@ if __name__ == '__main__':
         ftpClient.retrieveFiles(
             'JORFSIMPLE',
             os.path.join(cwd, 'data/JORFSIMPLE/'),
-            logsDirPath=logsDirPath,
+            downloadsLogFile=downloadsLogFile,
             downloadFreemium=downloadFreemium
         )
         ftpClient.terminate()
@@ -82,8 +87,8 @@ if __name__ == '__main__':
     dbm = DatabaseManager(overwriteIndices=overwriteIndices, verbose=verbose)
     dbm.initESIndexes()
 
-    summaryParser = SummaryParser()
-    articleParser = ArticleParser()
+    summaryParser = SummaryParser(logFile=logFile)
+    articleParser = ArticleParser(logFile=logFile)
 
     # 3. Iterate through tarballs and populate database
     # IMPORTANT: the following piece of code is only valid if tarballs are
@@ -95,7 +100,7 @@ if __name__ == '__main__':
     tarballAbsPaths = glob.glob(dataDirPath, recursive=True)
     previouslyParsedFileList = []
 
-    with open(os.path.join(logsDirPath, 'parsed.txt'), 'r+') as f:
+    with open(parsedLogFile, 'r+') as f:
         for line in f:
             previouslyParsedFileList.append(line.rstrip())
 
@@ -130,7 +135,7 @@ if __name__ == '__main__':
 
                         member = tar.next()
 
-                with open(parsedListFile, 'a+') as f:
+                with open(parsedLogFile, 'a+') as f:
                     f.write(tarballFileName + '\n')
 
 # %% Test cell

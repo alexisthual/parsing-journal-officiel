@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 class ArticleParser:
     '''Creates an XML parser for JORF TEXT files.'''
 
-    def __init__(self):
+    def __init__(self, logFile=None):
         '''Inits parser with basic information.'''
 
         self.getTextTags = [
@@ -18,6 +18,8 @@ class ArticleParser:
         self.getContenuTags = ['NOTICE', 'VISAS', 'ABRO', 'RECT', 'SM', 'TP']
         self.getTextArticleTags = ['ID', 'ID_ELI']
         self.getContenuArticleTags = ['SM', 'BLOC_TEXTUEL']
+        self.logFile = logFile
+
         self.initiate()
 
     def initiate(self):

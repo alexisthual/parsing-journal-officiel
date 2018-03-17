@@ -19,7 +19,7 @@ class FTPClient:
         self.ftp = FTP(self.host)
         self.ftp.login()
 
-    def retrieveFiles(self, dirPath, outputFolder, logsDirPath=None,
+    def retrieveFiles(self, dirPath, outputFolder, downloadsLogFile=None,
                       regex=None, downloadFreemium=True):
         '''Downloads all files in a given directory.'''
 
@@ -27,8 +27,8 @@ class FTPClient:
         fileNames = self.ftp.nlst()
         previouslyDownloadedFileList = []
 
-        if logsDirPath:
-            with open(os.path.join(logsDirPath, 'downloaded.txt')) as f:
+        if downloadsLogFile:
+            with open(downloadsLogFile, 'r+') as f:
                 for line in f:
                     previouslyDownloadedFileList.append(line.rstrip())
 
@@ -55,8 +55,8 @@ class FTPClient:
                 with open(os.path.join(definitiveOutputFolder, fileName), 'wb') as f:
                     self.ftp.retrbinary('RETR {}'.format(fileName), f.write)
 
-                if logsDirPath:
-                    with open(os.path.join(logsDirPath, 'downloaded.txt'), 'a+') as f:
+                if downloadsLogFile:
+                    with open(downloadsLogFile, 'a+') as f:
                         f.write(fileName + '\n')
 
     def terminate(self):
