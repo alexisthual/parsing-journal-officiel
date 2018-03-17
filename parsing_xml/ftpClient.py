@@ -27,7 +27,7 @@ class FTPClient:
         fileNames = self.ftp.nlst()
         previouslyDownloadedFileList = []
 
-        if downloadsLogFile:
+        if downloadsLogFile and os.path.isfile(downloadsLogFile):
             with open(downloadsLogFile, 'r+') as f:
                 for line in f:
                     previouslyDownloadedFileList.append(line.rstrip())
