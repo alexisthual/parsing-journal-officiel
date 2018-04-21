@@ -1,13 +1,6 @@
-parsing_xml/data/*
-parsing_xml/logs/
+data/*
+logs/
 **/logs.txt
-
-scrapping/output/*
-scrapping/output_save/*
-scrapping/tests/*
-scrapping/test.py
-scrapping/logs/*
-scrapping/spiders/__pycache__/*
 
 */.DS_Store
 **/__pycache__/*
