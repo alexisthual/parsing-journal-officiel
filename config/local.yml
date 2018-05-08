@@ -1,0 +1,7 @@
+overwriteIndices: False
+downloadTarballs: True
+downloadFreemium: False
+parseFreemium: True
+downloadsDirPath: './data/JORFSIMPLE/'
+dataDirPathRegex: './data/JORFSIMPLE/**/*.tar.gz'
+logsDirPath: './logs/JORFSIMPLE/'

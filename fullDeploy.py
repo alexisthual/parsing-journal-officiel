@@ -1,7 +1,10 @@
+import argparse
 import glob
 import os
 import re
 import tarfile
+import yaml
+
 from datetime import datetime
 from tqdm import tqdm
 
@@ -55,16 +58,29 @@ if __name__ == '__main__':
     * populate the local database with files from the downloaded tarballs
     '''
 
-    # CONSTANTS
-    verbose = True
-    overwriteIndices = False
-    downloadTarballs = True
-    downloadFreemium = False
-    parseFreemium = True
+    # Read CLI arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('configPath', metavar='configPath', 
+            help='Path to YML config file')
+    parser.add_argument('-v', '--verbose', action='store_true', 
+            help='Should print information and debug messages')
+    args = parser.parse_args()
 
-    cwd = os.getcwd()
-    dataDirPath = os.path.join(cwd, 'data/JORFSIMPLE/**/*.tar.gz')
-    logsDirPath = os.path.join(cwd, 'logs/JORFSIMPLE')
+    verbose = args.verbose
+    
+    with open(args.configPath, 'r') as ymlFile:
+        params = yaml.load(ymlFile)
+
+    # CONSTANTS
+    verbose = args.verbose
+    overwriteIndices = params['overwriteIndices']
+    downloadTarballs = params['downloadTarballs']
+    downloadFreemium = params['downloadFreemium']
+    parseFreemium = params['parseFreemium']
+
+    downloadsDirPath = params['downloadsDirPath']
+    dataDirPathRegex = params['dataDirPathRegex']
+    logsDirPath = params['logsDirPath']
 
     downloadsLogFile = os.path.join(logsDirPath, 'downloaded.txt')
     parsedLogFile = os.path.join(logsDirPath, 'parsed.txt')
@@ -77,7 +93,7 @@ if __name__ == '__main__':
         ftpClient = FTPClient('echanges.dila.gouv.fr', verbose=verbose)
         ftpClient.retrieveFiles(
             'JORFSIMPLE',
-            os.path.join(cwd, 'data/JORFSIMPLE/'),
+            downloadsDirPath,
             downloadsLogFile=downloadsLogFile,
             downloadFreemium=downloadFreemium
         )
@@ -97,7 +113,7 @@ if __name__ == '__main__':
     # that incremental files are treated in the right order (which should here
     # be the case the they are implicitely ordered by file name, which here
     # implies chronological sorting as well).
-    tarballAbsPaths = glob.glob(dataDirPath, recursive=True)
+    tarballAbsPaths = glob.glob(dataDirPathRegex, recursive=True)
     previouslyParsedFileList = []
 
     if os.path.isfile(parsedLogFile):
