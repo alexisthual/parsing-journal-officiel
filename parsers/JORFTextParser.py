@@ -28,8 +28,8 @@ class ArticleParser:
         self.signataires = None
 
     def parse(self, xmlStringContent):
-        '''Takes the absolute path to the file to be parsed
-        and parses it.'''
+        '''Takes a string representing xml
+        and parses it to json format.'''
 
         self.initiate()
         self.root = ET.fromstring(xmlStringContent)

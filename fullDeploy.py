@@ -6,7 +6,6 @@ from datetime import datetime
 from tqdm import tqdm
 
 from ftpClient import FTPClient
-from fileExtracter import FileExtracter
 from parsers.JORFContextParser import SummaryParser
 from parsers.JORFTextParser import ArticleParser
 from databaseManager import DatabaseManager
