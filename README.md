@@ -3,20 +3,22 @@
 Le code ci présent a pour but de collecter les données du Journal Officiel
 français, de les analyser et de les ajouter à une base de données.
 
+## Installation
+
+Certaines dépendances Python sont requises pour exécuter les scripts de ce repo,
+il suffit d'exécuter la commande suivante pour les installer :
+```
+pip3 install -r requirements.txt
+```
+
 ## Exécution du code
 
 * Une instance ElasticSearch (>= 6.0.2) doit être démarrée sur la machine sur laquelle
 vous exécutez le code actuel.
-* Ensuite, il suffit d'exécuter les commandes suivantes :
+* Ensuite, il suffit d'exécuter le commande suivante depuis la racine du repo :
 ```
-cd parsing_xml
-python3 ./fullDeploy.py
+python3 fullDeploy.py config/default.yml
 ```
-
-Certaines dépendances sont requises pour exécuter ce code, parmi lesquelles :
-* le client Python 3 d'elasticsearch (`pip3 install elasticsearch`)
-* tqdm
-* anytree
 
 Cela aura pour effet de télécharger les données depuis le serveur FTP de la DILA
 (Direction de l'Information Légale et Administrative) et de peupler votre
