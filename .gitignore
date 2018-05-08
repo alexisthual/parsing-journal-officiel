@@ -1,5 +1,6 @@
 data/*
 logs/
+XMLStructures/
 **/logs.txt
 
 */.DS_Store

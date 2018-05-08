@@ -32,6 +32,7 @@ if __name__ == '__main__':
     tarballAbsPath = 'data/JORFSIMPLE/Freemium_jorf_simple_20170302-103615.tar.gz'
     tarballAbsPath = 'data/JORFSIMPLE/incremental/jorfsimple_20170228-011719.tar.gz'
     structure = defaultdict(recursiveDefaultDict)
+    outputFilePath = 'XMLStructures/structure'
 
     # Open tarball stream
     with tarfile.open(tarballAbsPath, 'r|gz') as tar:
@@ -53,4 +54,6 @@ if __name__ == '__main__':
 
                 member = tar.next()
 
+    with open(outputFilePath, 'w') as outputFile:
+        outputFile.write(json.dumps(structure))
     #print(json.dumps(structure))
