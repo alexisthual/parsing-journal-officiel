@@ -3,5 +3,6 @@ downloadTarballs: True
 downloadFreemium: False
 parseFreemium: True
 downloadsDirPath: '/root/data/JO/'
-dataDirPathRegex: '/root/data/JO/**/*.tar.gz'
+dataDirPath: '/root/data/JO/'
+dataRegex: '**/*.tar.gz'
 logsDirPath: '/root/logs/JO/'

@@ -79,7 +79,10 @@ if __name__ == '__main__':
     parseFreemium = params['parseFreemium']
 
     downloadsDirPath = params['downloadsDirPath']
-    dataDirPathRegex = params['dataDirPathRegex']
+    dataDirPathRegex = os.path.join(
+        params['dataDirPath'],
+        params['dataRegex']
+    )
     logsDirPath = params['logsDirPath']
 
     downloadsLogFile = os.path.join(logsDirPath, 'downloaded.txt')
@@ -87,6 +90,13 @@ if __name__ == '__main__':
     logFile = os.path.join(logsDirPath, 'logs.txt')
 
     fileNameRegex = re.compile('.*jorf/simple/JORF/CONT/([0-9]{2}/){5}[a-zA-Z0-9]+/[a-zA-Z0-9]+\.xml')
+
+    # Check that output folders exist
+    # and create them if need be.
+    dirList = [downloadsDirPath, dataDirPath, logsDirPath]
+    for directory in dirList:
+        if not os.path.isdir(directory):
+            os.makedirs(directory)
 
     # 1. Collect tarballs
     if downloadTarballs:
