@@ -80,6 +80,10 @@ if __name__ == '__main__':
 
     downloadsDirPath = params['downloadsDirPath']
     dataDirPath = params['dataDirPath']
+    incrementalDataDirPath = os.path.join(
+        dataDirPath,
+        'incremental'
+    )
     dataDirPathRegex = os.path.join(
         dataDirPath,
         params['dataRegex']
@@ -94,7 +98,8 @@ if __name__ == '__main__':
 
     # Check that output folders exist
     # and create them if need be.
-    dirList = [downloadsDirPath, dataDirPath, logsDirPath]
+    dirList = [downloadsDirPath, dataDirPath,
+               incrementalDataDirPath, logsDirPath]
     for directory in dirList:
         if not os.path.isdir(directory):
             os.makedirs(directory)

@@ -46,7 +46,7 @@ class FTPClient:
             definitiveOutputFolder = outputFolder
 
             # If the file's name doesn't contain 'Freemium', then it is
-            # an incremental folder.
+            # an incremental file and thus goes to the incremental folder.
             if not re.match('.*Freemium.*', fileName):
                 definitiveOutputFolder = os.path.join(outputFolder, 'incremental')
             elif not downloadFreemium:
