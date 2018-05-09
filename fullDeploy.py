@@ -79,8 +79,9 @@ if __name__ == '__main__':
     parseFreemium = params['parseFreemium']
 
     downloadsDirPath = params['downloadsDirPath']
+    dataDirPath = params['dataDirPath']
     dataDirPathRegex = os.path.join(
-        params['dataDirPath'],
+        dataDirPath,
         params['dataRegex']
     )
     logsDirPath = params['logsDirPath']
