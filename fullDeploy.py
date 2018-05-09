@@ -79,13 +79,12 @@ if __name__ == '__main__':
     parseFreemium = params['parseFreemium']
 
     downloadsDirPath = params['downloadsDirPath']
-    dataDirPath = params['dataDirPath']
     incrementalDataDirPath = os.path.join(
-        dataDirPath,
+        downloadsDirPath,
         'incremental'
     )
     dataDirPathRegex = os.path.join(
-        dataDirPath,
+        downloadsDirPath,
         params['dataRegex']
     )
     logsDirPath = params['logsDirPath']
@@ -98,8 +97,7 @@ if __name__ == '__main__':
 
     # Check that output folders exist
     # and create them if need be.
-    dirList = [downloadsDirPath, dataDirPath,
-               incrementalDataDirPath, logsDirPath]
+    dirList = [downloadsDirPath, incrementalDataDirPath, logsDirPath]
     for directory in dirList:
         if not os.path.isdir(directory):
             os.makedirs(directory)
