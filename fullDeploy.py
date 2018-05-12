@@ -144,16 +144,28 @@ if __name__ == '__main__':
         if re.match('.*\.tar\.gz', tarballAbsPath) and\
            (parseFreemium or re.match('^((?!Freemium).)*$', tarballAbsPath)) and\
            (tarballFileName not in previouslyParsedFileList):
-            # tarballAbsPath = os.path.join(dataDirPath, tarballAbsPath)
+
+            # Do a first pass on data to calculate total number of files
+            totalNumberFiles = 0
 
             with tarfile.open(tarballAbsPath, 'r|gz') as tar:
-                with tqdm() as memberBar:
+                member = tar.next()
+                while member:
+                    totalNumberFiles += 1
+                    member = tar.next()
+
+            # Parse tarball's files
+            with tarfile.open(tarballAbsPath, 'r|gz') as tar:
+                with tqdm(total=totalNumberFiles) as memberBar:
+
                     # Load tarball's next header
                     member = tar.next()
+
                     while member:
                         # Check that the current file name is suitable.
                         if re.match(fileNameRegex, member.name):
                             tarFile = tar.extractfile(member)
+
                             if tarFile:
                                 content = tarFile.read().decode('utf-8')
 
