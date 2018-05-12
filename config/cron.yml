@@ -1,0 +1,7 @@
+overwriteIndices: False
+downloadTarballs: True
+downloadFreemium: False
+parseFreemium: False
+downloadsDirPath: '/root/data/JO/'
+logsDirPath: '/root/logs/JO/'
+dataRegex: '**/*.tar.gz'
