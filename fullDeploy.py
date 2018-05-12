@@ -117,6 +117,9 @@ if __name__ == '__main__':
     dbm = DatabaseManager(overwriteIndices=overwriteIndices, verbose=verbose)
     dbm.initESIndexes()
 
+    if overwriteIndices:
+        os.remove(parsedLogFile)
+
     summaryParser = SummaryParser(logFile=logFile)
     articleParser = ArticleParser(logFile=logFile)
 
