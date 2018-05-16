@@ -81,6 +81,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('configPath', metavar='configPath',
             help='Path to YML config file')
+    parser.add_argument('-i', dest='inputFilePath',
+            help='Path to input tarball')
     parser.add_argument('-o', dest='outputFileName',
             help='Output file name')
     parser.add_argument('-v', '--verbose', action='store_true',
@@ -96,8 +98,7 @@ if __name__ == '__main__':
         os.makedirs(params['xmlStructuresDirPath'])
 
     # CONSTANTS
-    #tarballAbsPath = '/home/alexis/bureau_ouvert/jo/data/JORFSIMPLE/Freemium_jorf_simple_20170302-103615.tar.gz'
-    tarballAbsPath = '/home/alexis/bureau_ouvert/jo/data/JORFSIMPLE/incremental/jorfsimple_20170228-011719.tar.gz'
+    tarballAbsPath = args.intputFilePath
     outputFilePath = os.path.join(
         params['xmlStructuresDirPath'],
         args.outputFileName
