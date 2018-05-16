@@ -98,7 +98,7 @@ if __name__ == '__main__':
         os.makedirs(params['xmlStructuresDirPath'])
 
     # CONSTANTS
-    tarballAbsPath = args.intputFilePath
+    tarballAbsPath = args.inputFilePath
     outputFilePath = os.path.join(
         params['xmlStructuresDirPath'],
         args.outputFileName
