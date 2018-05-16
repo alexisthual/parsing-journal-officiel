@@ -2,6 +2,7 @@ overwriteIndices: False
 downloadTarballs: True
 downloadFreemium: False
 parseFreemium: True
-downloadsDirPath: './data/JORFSIMPLE/'
-dataDirPathRegex: './data/JORFSIMPLE/**/*.tar.gz'
-logsDirPath: './logs/JORFSIMPLE/'
+downloadsDirPath: '/home/alexis/bureau_ouvert/jo/data/JORFSIMPLE/'
+logsDirPath: '/home/alexis/bureau_ouvert/jo/logs/JORFSIMPLE/'
+dataRegex: '**/*.tar.gz'
+xmlStructures: '/home/alexis/bureau_ouvert/jo/xmlStructures/'

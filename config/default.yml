@@ -5,3 +5,4 @@ parseFreemium: True
 downloadsDirPath: '/root/data/JO/'
 logsDirPath: '/root/logs/JO/'
 dataRegex: '**/*.tar.gz'
+xmlStructures: '/root/data/xmlStructures/'
