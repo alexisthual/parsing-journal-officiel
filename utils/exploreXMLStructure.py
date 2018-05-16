@@ -1,9 +1,11 @@
+import argparse
 import json
 import operator
 import os
 import re
 import tarfile
 import xml.etree.ElementTree as ET
+import yaml
 
 from collections import defaultdict
 from functools import reduce
@@ -33,8 +35,20 @@ class tarballExplorer():
                 self.updateStructure(structure[xmlElement.tag], childElement)
 
     def explore(self):
+        # Do first pass on data in order to count
+        # total number of files
+        totalNumberMembers = 0
         with tarfile.open(self.tarballAbsPath, 'r|gz') as tar:
-            with tqdm() as pbar:
+            member = tar.next()
+            while member:
+                if re.match(self.fileNameRegex, member.name):
+                    totalNumberMembers += 1
+                member = tar.next()
+
+        # Iterate through files in the tarball and update structure
+        # for each file
+        with tarfile.open(self.tarballAbsPath, 'r|gz') as tar:
+            with tqdm(total=totalNumberMembers) as pbar:
                 member = tar.next()
 
                 while member:
@@ -51,6 +65,7 @@ class tarballExplorer():
                             pbar.update(1)
 
                     member = tar.next()
+
     def write(self):
         with open(self.outputFilePath, 'w') as outputFile:
             outputFile.write(json.dumps(self.structure))
@@ -62,10 +77,31 @@ def setValueNestedDict(nestedDicts, keyList, value):
     getNestedDictKey(nestedDicts, keyList[:-1])[keyList[:-1]] = value
 
 if __name__ == '__main__':
+    # Read CLI arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('configPath', metavar='configPath',
+            help='Path to YML config file')
+    parser.add_argument('-o', dest='outputFileName',
+            help='Output file name')
+    parser.add_argument('-v', '--verbose', action='store_true',
+            help='Should print information and debug messages')
+    args = parser.parse_args()
+
+    verbose = args.verbose
+
+    with open(args.configPath, 'r') as ymlFile:
+        params = yaml.load(ymlFile)
+
+    if not os.path.exists(params['xmlStructuresDirPath']):
+        os.makedirs(params['xmlStructuresDirPath'])
+
     # CONSTANTS
-    tarballAbsPath = 'data/JORFSIMPLE/Freemium_jorf_simple_20170302-103615.tar.gz'
-    tarballAbsPath = 'data/JORFSIMPLE/incremental/jorfsimple_20170228-011719.tar.gz'
-    outputFilePath = 'XMLStructures/structure'
+    #tarballAbsPath = '/home/alexis/bureau_ouvert/jo/data/JORFSIMPLE/Freemium_jorf_simple_20170302-103615.tar.gz'
+    tarballAbsPath = '/home/alexis/bureau_ouvert/jo/data/JORFSIMPLE/incremental/jorfsimple_20170228-011719.tar.gz'
+    outputFilePath = os.path.join(
+        params['xmlStructuresDirPath'],
+        args.outputFileName
+    )
 
     explorer = tarballExplorer(tarballAbsPath, outputFilePath)
     explorer.explore()
