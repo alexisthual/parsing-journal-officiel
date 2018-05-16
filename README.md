@@ -17,7 +17,7 @@ pip3 install -r requirements.txt
 vous exécutez le code actuel.
 * Ensuite, il suffit d'exécuter le commande suivante depuis la racine du repo :
 ```
-python3 fullDeploy.py config/default.yml
+python3 main.py config/default.yml
 ```
 
 Cela aura pour effet de télécharger les données depuis le serveur FTP de la DILA
