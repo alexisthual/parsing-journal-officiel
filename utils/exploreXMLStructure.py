@@ -22,7 +22,6 @@ class tarballExplorer():
         self.structure = defaultdict(recursiveDefaultDict)
         self.verbose = verbose
 
-        self.stopTags = ['table', 'br']
         self.fileNameRegex = fileNameRegex
 
     def updateStructure(self, structure, xmlElement):
@@ -30,9 +29,8 @@ class tarballExplorer():
         for attribute in xmlElement.attrib:
             structure[xmlElement.tag]['attributes'].append(attribute)
 
-        if not xmlElement.tag in self.stopTags:
-            for childElement in xmlElement:
-                self.updateStructure(structure[xmlElement.tag], childElement)
+        for childElement in xmlElement:
+            self.updateStructure(structure[xmlElement.tag], childElement)
 
     def explore(self):
         # Do first pass on data in order to count
