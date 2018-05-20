@@ -40,7 +40,7 @@ if __name__ == '__main__':
         else:
             return []
 
-    def recDictCleaning(currentKey, tree):
+    def recDictCleaning(currentKey, tree, alreadyRec):
         '''Cleans a nested json dict from useless xml tags.'''
 
         if isinstance(tree, list):
@@ -51,10 +51,10 @@ if __name__ == '__main__':
             if (not key in stopKeys) or (key == 'attributes' and len(tree[key]) > 0):
                 # In case there seems to be a recursion,
                 # store all recursive keys and count them by type.
-                if key == currentKey:
-                    rtree['*REC'] = Counter(recKeys(recDictCleaning(key, tree[key])))
+                if key == currentKey and not alreadyRec:
+                    rtree['*REC'] = Counter(recKeys(recDictCleaning(key, tree[key], True)))
                 else:
-                    rtree[key] = recDictCleaning(key, tree[key])
+                    rtree[key] = recDictCleaning(key, tree[key], alreadyRec)
 
         return rtree
 
@@ -63,7 +63,7 @@ if __name__ == '__main__':
         data = json.load(f)
 
     # Clean loaded dict
-    cleanedData = recDictCleaning(None, data)
+    cleanedData = recDictCleaning(None, data, False)
 
     # Output JSON data
     with open(args.outputFilePath, 'w') as f:
