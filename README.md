@@ -47,3 +47,9 @@ Exemple d'utilisation :
 ```
 python3 utils/exploreXMLStructure.py config/default.yml -i /root/data/LEGI/Freemium_legi_global_20170302-080753.tar.gz -o legi_freemium -r legi_arti -v
 ```
+
+Un second script est utilisé pour simplifier les résultats obtenus (notamment supprimer les balises HTML qui rendent l'étude du fichier plus fastidieuse).
+Exemple d'utilisation :
+```
+python3 utils/cleanXMLStructure.py -i /root/data/xmlStructures/legi_freemium -o /root/data/xmlStructures/legi_freemium_cleaned
+```
