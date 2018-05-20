@@ -36,7 +36,7 @@ if __name__ == '__main__':
         '''Returns the array of keys of all nested dicts of a given dict.'''
 
         if isinstance(tree, dict):
-            return reduce(operator.add, [list(tree.keys())] + [recKeys(key) for key in tree])
+            return reduce(operator.add, [list(tree.keys())] + [recKeys(tree[key]) for key in tree])
         else:
             return []
 
