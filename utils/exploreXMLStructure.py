@@ -63,11 +63,9 @@ class tarballExplorer():
 
                         if tarFile:
                             content = tarFile.read().decode('utf-8')
+                            rootElement = ET.fromstring(content)
 
-                            if re.match('.*TEXT[a-zA-Z0-9]+\.xml$', member.name) != None:
-                                rootElement = ET.fromstring(content)
-                                self.updateStructure(self.structure, rootElement)
-
+                            self.updateStructure(self.structure, rootElement)
                             pbar.update(1)
 
                     member = tar.next()
