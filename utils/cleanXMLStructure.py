@@ -27,7 +27,7 @@ if __name__ == '__main__':
     # CONSTANTS
     stopKeys = [
         'div', 'p', 'br', 'font', 'i', 'ol', 'li', 'b',
-        'table', 'sup', 'sub', 'em', 'ul', 'hr',
+        'table', 'sup', 'sub', 'em', 'ul', 'hr', 'blockquote',
         'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong',
         'attributes'
     ]
